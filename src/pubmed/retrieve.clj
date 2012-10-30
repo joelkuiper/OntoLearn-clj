@@ -1,11 +1,6 @@
 (ns ml-indications.pubmed.retrieve
-  (:import (uk.ac.ebi.ontocat OntologyServiceException
-                              OntologyTerm
-                              OntologyService$SearchOptions
-                              file.FileOntologyService)
-           java.net.URLEncoder)
-  (:require [clojure.java.io :as io]
-            [clj-http.client :as client]
+  (:import  java.net.URLEncoder)
+  (:require [clj-http.client :as client]
             [clojure.string :as str]
             [clj-xpath.core :as xp :only [$x* $x:text* $x:text?]])
 )
@@ -60,9 +55,10 @@
         web-env (results :WebEnv)
         query-key (results :QueryKey)
         total (results :Total)
+        search-url (str (results :url) "&" (to-url {"WebEnv" web-env "query_key" query-key}))
         step 10000]
     (loop [cnt 0]
-      (while (pubmed-error? (str (results :url) "&" (to-url {"WebEnv" web-env "query_key" query-key}))) (Thread/sleep 500))
+      (while (pubmed-error? search-url) (Thread/sleep 500))
       (println (str query-key " " web-env " " total " " (* cnt step)))
         (if (>= (* cnt step) total)
           true
