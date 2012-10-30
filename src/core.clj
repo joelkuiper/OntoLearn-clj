@@ -37,28 +37,30 @@
   (map #(get % annotation)
        (seq (map #(. disease-ontology getAnnotations %) terms))))
 
-(defn parse-publications [nodes] 
-  (map parse-publication nodes))
-
-(defn get-publications [file] 
-  (parse-publications (xp/$x "/PubmedArticleSet/PubmedArticle" (slurp (io/as-file file)))))
-
-(defn import-publications [files] 
-  (map get-publications files))
-  
-(defn parse-publication [node] 
-  (let [pmid (xp/$x:text* "./MedlineCitation/PMID" node)
-        db-diseases (wcar (car/smembers pmid))]
-    (if (empty? db-diseases)
+(defn import-publication [node] 
+  (let [pmid (xp/$x:text? "./MedlineCitation/PMID" node)]
+    (if (= (wcar (car/sismember "pmids" pmid)) 0)
 		  (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
 		        disease-terms (search-ontology disease-ontology mesh-terms)
-		        disease-ids (vec (accessions disease-terms))]
+            abstracts (xp/$x:text* ".//Abstract/AbstractText" node)
+		        disease-ids (vec (accessions disease-terms))
+          ]
       (do (wcar (doall (map #(car/sadd pmid %1) disease-ids))
-                (car/sadd "pmids" pmid))
-        {:pmid pmid 
-         :disease disease-ids})
+                (doall (map #(car/hset "abstracts" pmid %1) abstracts))
+                (doall (map #(car/sadd (str "disease-" disease-ids) %1) pmid))
+                (doall (map #(car/sadd "diseases" %1) disease-ids))
+                (car/sadd "all" pmid)
+                (if (not (empty? disease-ids)) (car/sadd "annotated" pmid))
+                ))
       )
-    {:pmid pmid 
-     :disease db-diseases}
     )
 ))
+
+(defn import-publications [nodes] 
+  (pmap import-publication nodes))
+
+(defn get-publications [file] 
+  (import-publications (xp/$x "/PubmedArticleSet/PubmedArticle" (slurp (io/as-file file)))))
+
+(defn import-files [files] 
+  (pmap get-publications files))
