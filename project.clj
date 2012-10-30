@@ -3,7 +3,10 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [clj-http "0.5.5"]
                  [clj-xpath  "1.3.0"]
-                 [uk.ac.ebi/ontoCAT "0.9.9.3-DRUGIS"]
+                 [local/ontocat "0.9.9.2"]
                  [com.taoensso/carmine "0.11.2"]]
-  :repositories {"drugis.org" "http://drugis.org/mvn/"})
+  :repositories {"zooma" "http://zooma.sourceforge.net/maven/repo/"
+                 "drugis.org" "http://drugis.org/mvn/"
+                 "project" "file:repo"
+                 "java maven" "http://repo2.maven.org/maven2/"})
 

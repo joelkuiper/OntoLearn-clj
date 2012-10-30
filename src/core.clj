@@ -5,7 +5,8 @@
   (:import (uk.ac.ebi.ontocat OntologyServiceException
                               OntologyTerm
                               OntologyService$SearchOptions
-                              file.FileOntologyService)
+                              file.FileOntologyService
+                              virtual.CachedServiceDecorator)
             java.net.URLEncoder)
 )
 
@@ -15,9 +16,11 @@
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
 (def disease-ontology 
-  (new FileOntologyService 
-       (new java.net.URI 
-            (.toString (io/as-url (io/resource "../resources/HumanDO.obo"))))
+  (let [fos (new FileOntologyService 
+                 (new java.net.URI 
+                      (.toString (io/as-url (io/resource "../resources/HumanDO.obo")))))
+        cos (. CachedServiceDecorator getService fos)]
+    cos
   )
 )
 
@@ -34,8 +37,17 @@
   (map #(get % annotation)
        (seq (map #(. disease-ontology getAnnotations %) terms))))
 
+(defn parse-publications [nodes] 
+  (map parse-publication nodes))
+
+(defn get-publications [file] 
+  (parse-publications (xp/$x "/PubmedArticleSet/PubmedArticle" (slurp (io/as-file file)))))
+
+(defn import-publications [files] 
+  (map get-publications files))
+  
 (defn parse-publication [node] 
-  (let [pmid (xp/$x:text? ".//PMID" node)
+  (let [pmid (xp/$x:text* "./MedlineCitation/PMID" node)
         db-diseases (wcar (car/smembers pmid))]
     (if (empty? db-diseases)
 		  (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
