@@ -1,4 +1,5 @@
-(ns ml-indications.core
+(ns indications.core
+  (:gen-class :main true)
   (:require  [clojure.java.io :as io]
              [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
              [taoensso.carmine :as car])
@@ -39,11 +40,11 @@
 
 (defn import-publication [node] 
   (let [pmid (xp/$x:text? "./MedlineCitation/PMID" node)]
-    (if (= (wcar (car/sismember "pmids" pmid)) 0)
-		  (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
-		        disease-terms (search-ontology disease-ontology mesh-terms)
+    (if (= (wcar (car/sismember "all" pmid)) 0)
+      (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
+            disease-terms (search-ontology disease-ontology mesh-terms)
             abstracts (xp/$x:text* ".//Abstract/AbstractText" node)
-		        disease-ids (vec (accessions disease-terms))
+            disease-ids (vec (accessions disease-terms))
           ]
       (do (wcar (doall (map #(car/sadd pmid %1) disease-ids))
                 (doall (map #(car/hset "abstracts" pmid %1) abstracts))
@@ -54,13 +55,20 @@
                 ))
       )
     )
+    true
 ))
 
 (defn import-publications [nodes] 
-  (pmap import-publication nodes))
+  (doall (map import-publication nodes)))
 
 (defn get-publications [file] 
   (import-publications (xp/$x "/PubmedArticleSet/PubmedArticle" (slurp (io/as-file file)))))
 
 (defn import-files [files] 
-  (pmap get-publications files))
+  (doall (pmap get-publications files)))
+
+(defn -main [& args]
+  (let [files (file-seq (io/as-file (io/resource "../resources/rcts")))]
+    (println "Running import")
+    (import-files (rest files))))
+

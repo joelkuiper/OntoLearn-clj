@@ -1,5 +1,5 @@
-(ns ml-indications.test.core
-  (:use [ml-indications.core])
+(ns indications.core-test
+  (:use [indications.core])
   (:use [clojure.test]))
 
 (deftest replace-me ;; FIXME: write

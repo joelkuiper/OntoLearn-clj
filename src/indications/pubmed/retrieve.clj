@@ -1,4 +1,4 @@
-(ns ml-indications.pubmed.retrieve
+(ns indications.pubmed.retrieve
   (:import  java.net.URLEncoder)
   (:require [clj-http.client :as client]
             [clojure.string :as str]
