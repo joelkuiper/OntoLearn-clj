@@ -6,3 +6,9 @@
 /.lein-failures
 /checkouts
 /.lein-deps-sum
+src/resources/rcts/
+target/
+bin/
+.classpath
+.project
+.settings/
