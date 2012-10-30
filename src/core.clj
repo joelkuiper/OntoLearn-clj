@@ -10,8 +10,8 @@
 )
 
 ; Set-up redis connection 
-(def pool         (car/make-conn-pool)) ; 
-(def spec-server1 (car/make-conn-spec)) ; ''
+(def pool         (car/make-conn-pool)) 
+(def spec-server1 (car/make-conn-spec))
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
 (def disease-ontology 
@@ -30,7 +30,7 @@
 (defn accessions [terms] 
  (map #(. % getAccession) terms))
 
-(defn annotation [annotation terms] 
+(defn annotations [annotation terms] 
   (map #(get % annotation)
        (seq (map #(. disease-ontology getAnnotations %) terms))))
 
@@ -40,7 +40,7 @@
     (if (empty? db-diseases)
 		  (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
 		        disease-terms (search-ontology disease-ontology mesh-terms)
-		        disease-ids (into [] (accessions disease-terms))]
+		        disease-ids (vec (accessions disease-terms))]
       (do (wcar (doall (map #(car/sadd pmid %1) disease-ids))
                 (car/sadd "pmids" pmid))
         {:pmid pmid 
