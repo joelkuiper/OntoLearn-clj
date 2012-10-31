@@ -2,11 +2,13 @@
   (:gen-class :main true)
   (:require  [clojure.java.io :as io]
              [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
+             [clojure.data.xml :as data.xml]
              [taoensso.carmine :as car])
   (:import (uk.ac.ebi.ontocat OntologyServiceException
                               OntologyTerm
                               OntologyService$SearchOptions
-                              file.FileOntologyService
+                              ols.OlsOntologyService
+                              bioportal.BioportalOntologyService
                               virtual.CachedServiceDecorator)
             java.net.URLEncoder)
 )
@@ -16,35 +18,44 @@
 (def spec-server1 (car/make-conn-spec))
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
-(def disease-ontology 
-  (let [fos (new FileOntologyService 
-                 (new java.net.URI 
-                      (.toString (io/as-url (io/resource "../resources/HumanDO.obo")))))
-        cos (. CachedServiceDecorator getService fos)]
-    cos
-  )
-)
+;(def disease-ontology 
+;  (new FileOntologyService 
+;                 (new java.net.URI 
+;                      (.toString (io/as-url (io/resource "../resources/HumanDO.obo"))))))
 
-(defn search-ontology [ontology terms]
+(def human-disease-ontology "1009") 
+
+(def bioportal
+  (new BioportalOntologyService "6c830f6b-6cfc-435c-b8a7-a289333d25cb"))
+
+(def ols
+  (new OlsOntologyService))
+
+(defn search-ontology [service ontology terms]
   (let [options (make-array OntologyService$SearchOptions 1)]
     (aset options 0 (. OntologyService$SearchOptions valueOf "EXACT"))
-    (seq (reduce concat (map (fn [term] (. ontology searchAll term options)) terms))))
+    (seq (reduce concat (map (fn [term] (. service searchOntology ontology term options)) terms))))
 )
+
+(def search-ontology-memo (memoize search-ontology))
 
 (defn accessions [terms] 
  (map #(. % getAccession) terms))
 
-(defn annotations [annotation terms] 
+(def accessions-mem
+  (memoize accessions))
+
+(defn annotations [service ontology annotation terms] 
   (map #(get % annotation)
-       (seq (map #(. disease-ontology getAnnotations %) terms))))
+       (seq (map #(. service getAnnotations ontology %) terms))))
 
 (defn import-publication [node] 
-  (let [pmid (xp/$x:text? "./MedlineCitation/PMID" node)]
+  (let [pmid (xp/$x:text? ".//MedlineCitation/PMID" node)]
     (if (= (wcar (car/sismember "all" pmid)) 0)
       (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
-            disease-terms (search-ontology disease-ontology mesh-terms)
+            disease-terms (search-ontology-memo bioportal human-disease-ontology mesh-terms)
             abstracts (xp/$x:text* ".//Abstract/AbstractText" node)
-            disease-ids (vec (accessions disease-terms))
+            disease-ids (vec (accessions-mem disease-terms))
           ]
       (do (wcar (doall (map #(car/sadd pmid %1) disease-ids))
                 (doall (map #(car/hset "abstracts" pmid %1) abstracts))
@@ -55,20 +66,30 @@
                 ))
       )
     )
-    true
 ))
 
 (defn import-publications [nodes] 
   (doall (map import-publication nodes)))
 
+(defn process-publication [publication]
+  (data.xml/emit-str publication))
+
 (defn get-publications [file] 
-  (import-publications (xp/$x "/PubmedArticleSet/PubmedArticle" (slurp (io/as-file file)))))
+    (->> (:content (data.xml/parse (io/reader file)))
+       (filter #(= :PubmedArticle (:tag %)))
+       (map process-publication)))
 
 (defn import-files [files] 
-  (doall (pmap get-publications files)))
+  (if (empty? files) 
+    true
+    (do 
+      (println (str "importing " (first files)))
+      (import-publications (get-publications (first files)))
+      (recur (rest files)))))
 
 (defn -main [& args]
-  (let [files (file-seq (io/as-file (io/resource "../resources/rcts")))]
-    (println "Running import")
-    (import-files (rest files))))
+  (let [files (file-seq (io/as-file (first args)))]
+    (if (empty? files)
+      (println "Please supply a valid directory with PubMed XML files") 
+      (import-files (rest files)))))
 
