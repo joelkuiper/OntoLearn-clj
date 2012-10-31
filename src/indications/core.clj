@@ -4,11 +4,12 @@
              [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
              [clojure.data.xml :as data.xml]
              [taoensso.carmine :as car])
-  (:import (uk.ac.ebi.ontocat OntologyServiceException
-                              OntologyTerm
+  (:import (uk.ac.ebi.ontocat OntologyTerm
+                              OntologyServiceException
                               OntologyService$SearchOptions
                               ols.OlsOntologyService
                               bioportal.BioportalOntologyService
+                              file.ReasonedFileOntologyService
                               virtual.CachedServiceDecorator)
             java.net.URLEncoder)
 )
@@ -18,23 +19,21 @@
 (def spec-server1 (car/make-conn-spec))
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
-;(def disease-ontology 
-;  (new FileOntologyService 
-;                 (new java.net.URI 
-;                      (.toString (io/as-url (io/resource "../resources/HumanDO.obo"))))))
-
-(def human-disease-ontology "1009") 
+(def file-ontology
+  {:service (new ReasonedFileOntologyService 
+                 (new java.net.URI 
+                      (.toString (io/as-url (io/resource "../resources/HumanDO.obo")))) "DOID")
+   :accession "DOID"})
 
 (def bioportal
-  (new BioportalOntologyService "6c830f6b-6cfc-435c-b8a7-a289333d25cb"))
+  {:service (new BioportalOntologyService "6c830f6b-6cfc-435c-b8a7-a289333d25cb")
+   :accession "1009"})
 
-(def ols
-  (new OlsOntologyService))
-
-(defn search-ontology [service ontology terms]
+(defn search-ontology [ontology terms]
   (let [options (make-array OntologyService$SearchOptions 1)]
     (aset options 0 (. OntologyService$SearchOptions valueOf "EXACT"))
-    (seq (reduce concat (map (fn [term] (. service searchOntology ontology term options)) terms))))
+    (seq (reduce concat (map (fn [term] (. (ontology :service) searchOntology (ontology :accession) term options)) terms))))
+
 )
 
 (def search-ontology-memo (memoize search-ontology))
@@ -45,15 +44,15 @@
 (def accessions-mem
   (memoize accessions))
 
-(defn annotations [service ontology annotation terms] 
+(defn annotations [ontology annotation terms] 
   (map #(get % annotation)
-       (seq (map #(. service getAnnotations ontology %) terms))))
+       (seq (map #(. (ontology :service) getAnnotations (ontology :accession) %) terms))))
 
 (defn import-publication [node] 
   (let [pmid (xp/$x:text? ".//MedlineCitation/PMID" node)]
     (if (= (wcar (car/sismember "all" pmid)) 0)
       (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
-            disease-terms (search-ontology-memo bioportal human-disease-ontology mesh-terms)
+            disease-terms (search-ontology-memo file-ontology mesh-terms)
             abstracts (xp/$x:text* ".//Abstract/AbstractText" node)
             disease-ids (vec (accessions-mem disease-terms))
           ]
