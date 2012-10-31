@@ -36,7 +36,8 @@
 
 )
 
-(def search-ontology-memo (memoize search-ontology))
+(def search-ontology-memo 
+  (memoize search-ontology))
 
 (defn accessions [terms] 
  (map #(. % getAccession) terms))
