@@ -1,6 +1,7 @@
 (ns indications.core
   (:gen-class :main true)
   (:require  [clojure.java.io :as io]
+             [clojure.string  :as strs]
              [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
              [clojure.data.xml :as data.xml]
              [taoensso.carmine :as car])
@@ -19,43 +20,65 @@
 (def spec-server1 (car/make-conn-spec))
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
-(def file-ontology
+(defonce file-ontology
   {:service (new ReasonedFileOntologyService 
                  (new java.net.URI 
                       (.toString (io/as-url (io/resource "../resources/HumanDO.obo")))) "DOID")
    :accession "DOID"})
 
-(def bioportal
-  {:service (new BioportalOntologyService "6c830f6b-6cfc-435c-b8a7-a289333d25cb")
-   :accession "1009"})
+;(def bioportal
+;  {:service (new BioportalOntologyService "6c830f6b-6cfc-435c-b8a7-a289333d25cb")
+;   :accession "1009"})
 
-(defn search-ontology [ontology terms]
-  (let [options (make-array OntologyService$SearchOptions 1)]
-    (aset options 0 (. OntologyService$SearchOptions valueOf "EXACT"))
-    (seq (reduce concat (map (fn [term] (. (ontology :service) searchOntology (ontology :accession) term options)) terms))))
+;(def search-ontology-memo 
+;  (memoize search-ontology))
 
-)
+; defn-memo by Chouser:
+(defmacro defn-memo
+  "Just like defn, but memoizes the function using clojure.core/memoize"
+  [fn-name & defn-stuff]
+  `(do
+     (defn ~fn-name ~@defn-stuff)
+     (alter-var-root (var ~fn-name) memoize)
+     (var ~fn-name)))
 
-(def search-ontology-memo 
-  (memoize search-ontology))
 
-(defn accessions [terms] 
+(defn synonyms [ontology accession]
+  (seq (. (ontology :service) getSynonyms (ontology :accession) accession)))
+
+(defn label [term]
+  (. term getLabel))
+  
+(defn-memo accessions [terms] 
  (map #(. % getAccession) terms))
 
-(def accessions-mem
-  (memoize accessions))
+(defn ontology-assoc [ontology term]
+  (let [accession (first (accessions [term]))
+        label     (label term)
+        synonyms  (synonyms ontology accession)
+        terms     (cons label synonyms)]
+    (into {} (map (fn [term] {(strs/lower-case term) accession}) terms))))
+  
+(defn ontology-table [ontology]
+  (let [all-terms  (seq (. (ontology :service) getAllTerms (ontology :accession)))
+        size       (count all-terms)]
+    (loop [i 0 m (transient {})]
+      (if (< i size)
+        (recur (inc i) (conj! m (ontology-assoc ontology (nth all-terms i))))
+        (persistent! m)))))
 
-(defn annotations [ontology annotation terms] 
-  (map #(get % annotation)
-       (seq (map #(. (ontology :service) getAnnotations (ontology :accession) %) terms))))
+(defn search [ontology-table]
+  (fn [terms]
+    (into {} (map (fn [term] (apply hash-map (remove nil? (find ontology-table (strs/lower-case term))))) terms))))
+
+(def search-file (search (ontology-table file-ontology)))
 
 (defn import-publication [node] 
   (let [pmid (xp/$x:text? ".//MedlineCitation/PMID" node)]
     (if (= (wcar (car/sismember "all" pmid)) 0)
       (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
-            disease-terms (search-ontology-memo file-ontology mesh-terms)
+            disease-ids (vec (vals (search-file mesh-terms)))
             abstracts (xp/$x:text* ".//Abstract/AbstractText" node)
-            disease-ids (vec (accessions-mem disease-terms))
           ]
       (do (wcar (doall (map #(car/sadd pmid %1) disease-ids))
                 (doall (map #(car/hset "abstracts" pmid %1) abstracts))
