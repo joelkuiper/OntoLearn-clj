@@ -5,7 +5,8 @@
                  [clj-xpath  "1.3.0"]
                  [org.clojure/data.xml "0.0.6"]
                  [local/ontocat "0.9.9.2"]
-                 [com.taoensso/carmine "0.11.2"]]
+                 [com.taoensso/carmine "0.11.2"]
+                 [clucy "0.3.0"]]
   :repositories {"drugis.org" "http://drugis.org/mvn/"
                  "project" "file:repo"
                  "java maven" "http://repo2.maven.org/maven2/"}
