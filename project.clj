@@ -6,6 +6,7 @@
                  [org.clojure/data.xml "0.0.6"]
                  [local/ontocat "0.9.9.2"]
                  [com.taoensso/carmine "0.11.2"]
+                 [org.clojure/data.csv "0.1.2"]
                  [clucy "0.3.0"]]
   :repositories {"drugis.org" "http://drugis.org/mvn/"
                  "project" "file:repo"

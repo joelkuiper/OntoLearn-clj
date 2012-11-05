@@ -5,6 +5,7 @@
             [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
             [clojure.data.xml :as data.xml]
             [clucy.core :as clucy]
+            [clojure.data.csv :as csv]
             [taoensso.carmine :as car])
   (:import (uk.ac.ebi.ontocat OntologyTerm
                               OntologyServiceException
@@ -38,7 +39,6 @@
   (seq (first (map #(get % annotation)
                    (seq (map #(. (ontology :service) getAnnotations (ontology :accession) %) terms))))))
 
-
 (defn ontology-entry [ontology term]
   {:accession (.getAccession term)
    :label (.getLabel term)
@@ -60,7 +60,8 @@
                  :accession id}]
       (assoc ontology :lucene (create-index ontology))))
 
-(def disease-ontology (create-ontology (io/resource "../resources/HumanDO.obo") "DOID"))
+;(def disease-ontology (create-ontology (io/resource "../resources/HumanDO.obo") "DOID"))
+(def disease-ontology)
 
 (defn search [ontology]
   (fn [terms]
@@ -104,9 +105,24 @@
       (import-publications (get-publications (first files)))
       (recur (rest files)))))
 
+; Code for importing mesh to term mapping in Redis
+(defn import-mesh-terms [terms]
+  (if (empty? terms)
+    true
+    (let [id (first (first terms))
+          title (second (first terms))]
+      (if (= (wcar (car/hexists "mesh" title) 0))
+        (wcar (car/hset "mesh" title id)))
+      (recur (rest terms)))))
+
+(defn import-mesh [file]
+  (with-open [in-file (io/reader (io/resource file))] 
+    (doall (import-mesh-terms (csv/read-csv in-file)))))
+
 (defn -main [& args]
   (let [files (file-seq (io/as-file (first args)))]
     (if (empty? files)
       (println "Please supply a valid directory with PubMed XML files") 
-      (import-files (rest files)))))
+      (do 
+        (import-files (rest files))))))
 
