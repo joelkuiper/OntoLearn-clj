@@ -7,10 +7,12 @@
                  [local/ontocat "0.9.9.2"]
                  [com.taoensso/carmine "0.11.2"]
                  [org.clojure/data.csv "0.1.2"]
+                 [org.clojars.jkk/clj-tokenizer "0.2.0"]
                  [clucy "0.3.0"]]
   :repositories {"drugis.org" "http://drugis.org/mvn/"
                  "project" "file:repo"
                  "java maven" "http://repo2.maven.org/maven2/"}
   :main         indications.core
-  :jvm-ops      ["-Xmx2g" "-Xmn256m" "-server"])
+  :plugins      [[lein-swank "1.4.3"]]
+  :jvm-ops      ["-Xmx8g" "-Xmn256m" "-server"])
 
