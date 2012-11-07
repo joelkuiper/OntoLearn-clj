@@ -2,61 +2,76 @@
   (:require [clojure.java.io :as io]
             [clojure.set :as s]
             [clojure.string :as strs]
-            [clj-tokenizer.core :as tok]
             [taoensso.carmine :as car])
   (:import  java.io.File
-            java.lang.String
-            java.util.Arrays
-            java.util.concurrent.ConcurrentSkipListSet))
+           java.lang.String
+           java.util.Arrays
+           java.util.concurrent.ConcurrentSkipListSet
+           (uk.ac.ebi.ontocat OntologyTerm
+                              OntologyServiceException
+                              OntologyService$SearchOptions
+                              ols.OlsOntologyService
+                              bioportal.BioportalOntologyService
+                              file.FileOntologyService)
+           java.net.URLEncoder))
 
 ; Set-up redis connection 
 (def pool         (car/make-conn-pool)) 
 (def spec-server1 (car/make-conn-spec))
 (defmacro wcar [& body] `(car/with-conn pool spec-server1 ~@body))
 
-(def tokens (atom (ConcurrentSkipListSet.)))
+; defn-memo by Chouser:
+(defmacro defn-memo
+  "Just like defn, but memoizes the function using clojure.core/memoize"
+  [fn-name & defn-stuff]
+  `(do
+     (defn ~fn-name ~@defn-stuff)
+     (alter-var-root (var ~fn-name) memoize)
+     (var ~fn-name)))
 
-(defn- tokenize [string] 
-  (tok/token-seq (tok/token-stream-without-stopwords string)))
+(defn synonyms [ontology accession]
+  (seq (. (ontology :service) getSynonyms (ontology :accession) accession)))
+
+(defn-memo accessions [terms] 
+  (map #(. % getAccession) terms))
+
+(defn-memo annotations [ontology annotation terms] 
+  (seq (first (map #(get % annotation)
+                   (seq (map #(. (ontology :service) getAnnotations (ontology :accession) %) terms))))))
+(defn mesh-id [term] 
+  (wcar (car/hget "mesh" term)))
 
 (defn- abstract [pmid]
   (wcar (car/hget "abstracts" pmid)))
 
-(defn- add-tokens [string]
-  (. @tokens addAll (tokenize string)))
+(defn- mesh-index [ontology]
+  "Create MESH->DOID map"
+  (let [all-terms (seq (. (ontology :service) getAllTerms (ontology :accession)))
+        size (count all-terms)]
+    (loop [idx 0 mesh->doid (transient {})] 
+      (if (>= idx size) 
+        (persistent! mesh->doid)
+        (let [doid (.getAccession (nth all-terms idx))
+              xrefs (annotations ontology "xref" [doid])
+              mapping (into {} (map #(assoc {} % doid) xrefs))]
+          (recur (inc idx) (conj! mesh->doid mapping)))))))
 
-(defn- fill-tokens []
-  (do 
-    (doall (pmap (fn [abstr] (add-tokens abstr)) (wcar (car/hvals "abstracts"))))
-    nil))
+(defn create-ontology [file id]
+  (let [ontology {:service (FileOntologyService.
+                             (java.net.URI. 
+                               (.toString (io/as-url file))) id)
+                  :accession id}]
+    (assoc ontology :mesh->doid (mesh-index ontology))))
+
+(def disease-ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
+(def tokens (atom (ConcurrentSkipListSet.)))
+
+(defn doids [ontology mesh-terms] 
+  (let [mesh-ids (filter (comp not nil?) (map (fn [x] (mesh-id x)) mesh-terms))
+        mesh-matches (into {} (map #(find (ontology :mesh->doid) %) mesh-ids))]
+    (vec (vals mesh-matches))))
 
 (defn- as-float [bool] 
   (if bool 
     1.0
     0.0))
-
-(defn emit-feature-vector [string] 
-  (let [feature-vec (set (tokenize string))
-        features    (vec @tokens)]
-    (for [f features] (str (.indexOf features f) ":" (as-float (contains? feature-vec f))))))
-
-(defn- emit-row [entry] 
-  (let [abstracts (map abstract (val entry))
-        klass     (key entry)
-        row       (dorun (for [row abstracts] (str klass " " (emit-feature-vector row))))]
-    (strs/join " " row)))
-
-(defn write-svmlight [entries] 
-  (with-open [wtr (io/writer (io/file "datasets/" "data.svm"))]
-    (doseq [entry entries] (.write wtr (emit-row entry)))))  
-
-(defn -main [& args]
-  (let [diseases        (wcar (car/smembers "diseases"))
-        disease->pmids  (zipmap diseases (map #(wcar (car/smembers %)) diseases))]
-    (do
-      (println "Filling tokens")
-      (fill-tokens)
-      (println (str "Imported " (.size @tokens) " tokens"))
-      (println "Writing files")
-      (write-svmlight disease->pmids)
-      nil)))
