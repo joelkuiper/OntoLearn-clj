@@ -6,6 +6,22 @@
             [clojure.data.xml :as data.xml]
             [clojure.data.csv :as csv]
             [taoensso.carmine :as car]))
+(defn- mesh-index [ontology]
+  "Create MESH->DOID map"
+  (let [all-terms (seq (. (ontology :service) getAllTerms (ontology :accession)))
+        size (count all-terms)]
+    (loop [idx 0 mesh->doid (transient {})] 
+      (if (>= idx size) 
+        (persistent! mesh->doid)
+        (let [doid (.getAccession (nth all-terms idx))
+              xrefs (annotations ontology "xref" [doid])
+              mapping (into {} (map #(assoc {} % doid) xrefs))]
+          (recur (inc idx) (conj! mesh->doid mapping)))))))
+
+(defn doids [ontology mesh-terms] 
+  (let [mesh-ids (filter (comp not nil?) (map (fn [x] (mesh-id x)) mesh-terms))
+        mesh-matches (into {} (map #(get (ontology :mesh->doid) %) mesh-ids))]
+    (vec mesh-matches)))
 
 (defn import-publication [node] 
   (let [pmid (num (Integer/parseInt (xp/$x:text? ".//MedlineCitation/PMID" node)))]
@@ -57,6 +73,7 @@
 
 (defn -main [& args]
   (let [files (file-seq (io/as-file (first args)))]
+    (def disease-ontology (atom (assoc @disease-ontology :mesh->doid (mesh-index @disease-ontology))))
     (if (empty? files)
       (println "Please supply a valid directory with PubMed XML files") 
       (do 
