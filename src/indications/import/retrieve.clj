@@ -59,7 +59,6 @@
         step 10000]
     (loop [cnt 0]
       (while (pubmed-error? search-url) (Thread/sleep 500))
-      (println (str query-key " " web-env " " total " " (* cnt step)))
       (if (>= (* cnt step) total)
         true
         (do (spit (str dir "/" cnt ".xml") (pubmed-fetch web-env query-key (* cnt step) (* (inc cnt) step)))

@@ -7,10 +7,11 @@
                  [local/ontocat "0.9.9.2"]
                  [com.taoensso/carmine "0.11.2"]
                  [org.clojure/data.csv "0.1.2"]
-                 [org.apache.lucene/lucene-core "4.0.0"]]
+                 [org.apache.lucene/lucene-core "4.0.0-BETA"]
+                 [org.apache.lucene/lucene-analyzers-common "4.0.0-BETA"]]
   :repositories {"drugis.org" "http://drugis.org/mvn/"
                  "project" "file:repo"
                  "java maven" "http://repo2.maven.org/maven2/"}
   :main         indications.core
-  :jvm-ops      ["-Xmx8g" "-Xmn256m" "-server"])
+  :jvm-ops      ["-Xmx2g" "-Xmn128m" "-server"])
 
