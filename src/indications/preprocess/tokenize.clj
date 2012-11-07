@@ -5,10 +5,10 @@
            java.io.StringReader
            (org.apache.lucene.analysis.en KStemFilter)
            (org.apache.lucene.util Version)
-           ( org.apache.lucene.analysis.tokenattributes CharTermAttribute)
+           (org.apache.lucene.analysis.tokenattributes CharTermAttribute)
            (org.apache.lucene.analysis Token)))
 
-"Code heavily borrowed from eandrejko/clj-tokenizer"
+"Code some code borrowed from eandrejko/clj-tokenizer"
 
 (defn- analyzed-token-stream
   "builds a TokenStream from provided string str with stopwords removed"
@@ -28,14 +28,18 @@
     (.toString (. tk getAttribute CharTermAttribute))))
 
 (defn- token-seq
-  "returns a lazy sequence of tokens from the TokenStream tk"
+  "returns a sequence of tokens from the TokenStream tk"
   [tk]
-  (lazy-seq
    (if-let [ntok (next-token tk)]
-     (cons ntok (token-seq tk)))))
+     (cons ntok (token-seq tk))))
+
+(defn only-words 
+  "Removes all tokens containing only special characters or those not starting with a letter"
+  [tokens]
+  (filter #(re-matches #"([a-z]+)(.*)" %) tokens))
 
 (defn tokenize 
   "Tokenizes a string using the Lucene StandardAnalyzer and StandardTokenizer
   Lowercases string and removes words containing only non-alpha characters" 
   [string]
-  (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))
+  (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string))))))

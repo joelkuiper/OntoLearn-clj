@@ -65,26 +65,52 @@
     ;(assoc ontology :mesh->doid (mesh-index ontology))))
 
 (def disease-ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
-;(def tokens (atom (ConcurrentSkipListSet.)))
+(def tokens (atom (ConcurrentSkipListSet.)))
+
+(defn-memo token-vec []
+  (vec @tokens))
 
 ;(defn doids [ontology mesh-terms] 
   ;(let [mesh-ids (filter (comp not nil?) (map (fn [x] (mesh-id x)) mesh-terms))
         ;mesh-matches (into {} (map #(get (ontology :mesh->doid) %) mesh-ids))]
     ;(vec mesh-matches)))
 
-(defn- as-float [bool] 
+(defn- as-num [bool] 
   (if bool 
     1.0
     0.0))
 
 (defn- add-tokens [string]
-  (do 
-    (wcar (car/multi)
-      (doall (map #(car/sadd "tokens" %) (tok/tokenize string)))
-      (car/exec))))
-  ;(. @tokens addAll (tok/tokenize string)))
+  (. @tokens addAll string))
 
-(defn fill-tokens 
-  "Intensive task of filling the tokens set for the creation of the feature vector" 
-  []
-  (map add-tokens (wcar (car/hvals "abstracts"))))
+(defn emit-feature-vector [abstract] 
+  (let [num-features    (.size @tokens)
+        feature-vector  (make-array java.lang.String num-features)]
+    (dotimes [n num-features]
+      (aset feature-vector n (str n ":" (as-num (contains? abstract (nth (token-vec) n))))))
+    (strs/join " " (vec feature-vector))))
+
+(defn emit-rows [entry] 
+  (when ((comp not nil? val) entry)
+    (let [doid (key entry)
+          abstract (val entry)]
+      (str doid " " (emit-feature-vector abstract) "\n"))))
+
+(defn write-svmlight [entries] 
+  (with-open [wtr (io/writer (io/file "dataset/" "data.svm"))]
+    (doseq [entry entries] (.write wtr (emit-rows entry)))))
+
+(defn abstract-tokens [pmid]
+  (tok/tokenize (wcar (car/hget "abstracts" pmid))))
+
+(defn reverse-map [m]
+  (into {} (map (fn [a] (into {} (map (fn [b] (assoc {} b (key a))) (val a)))) m)))
+
+(defn -main [& args]
+  (let [doids args
+        doid->pmids (into {} (map #(assoc {} % (wcar (car/smembers %))) doids))
+        pmids->doid (reverse-map doid->pmids) 
+        pmids (flatten (vals doid->pmids))
+        abstracts (map (fn [x] (assoc {} (val x) (abstract-tokens (key x)))) pmids->doid)]
+    (doall (map add-tokens (vals abstracts)))
+    (write-svmlight abstracts)))

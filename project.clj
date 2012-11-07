@@ -13,5 +13,5 @@
                  "project" "file:repo"
                  "java maven" "http://repo2.maven.org/maven2/"}
   :main         indications.core
-  :jvm-ops      ["-Xmx2g" "-Xmn128m" "-server"])
+  :jvm-ops      ["-Xmx2g"])
 
