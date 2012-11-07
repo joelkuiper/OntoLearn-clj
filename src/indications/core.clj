@@ -23,12 +23,11 @@
   (wcar (car/hget "abstracts" pmid)))
 
 (defn- add-tokens [string]
-  (do (. @tokens addAll (tokenize string))
-    nil))
+  (. @tokens addAll (tokenize string)))
 
 (defn- fill-tokens []
-  (do
-    (pmap (fn [abstr] (add-tokens abstr)) (wcar (car/hvals "abstracts")))
+  (do 
+    (doall (pmap (fn [abstr] (add-tokens abstr)) (wcar (car/hvals "abstracts"))))
     nil))
 
 (defn- as-float [bool] 
@@ -55,6 +54,9 @@
   (let [diseases        (wcar (car/smembers "diseases"))
         disease->pmids  (zipmap diseases (map #(wcar (car/smembers %)) diseases))]
     (do
+      (println "Filling tokens")
       (fill-tokens)
+      (println (str "Imported " (.size @tokens) " tokens"))
+      (println "Writing files")
       (write-svmlight disease->pmids)
-      true)))
+      nil)))
