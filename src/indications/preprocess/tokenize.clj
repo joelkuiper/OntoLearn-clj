@@ -30,8 +30,8 @@
 (defn- token-seq
   "returns a sequence of tokens from the TokenStream tk"
   [tk]
-   (if-let [ntok (next-token tk)]
-     (cons ntok (token-seq tk))))
+  (if-let [ntok (next-token tk)]
+    (cons ntok (token-seq tk))))
 
 (defn only-words 
   "Removes all tokens containing only special characters or those not starting with a letter"

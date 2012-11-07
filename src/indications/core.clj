@@ -67,9 +67,6 @@
 (def disease-ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
 (def tokens (atom (ConcurrentSkipListSet.)))
 
-(defn-memo token-vec []
-  (vec @tokens))
-
 ;(defn doids [ontology mesh-terms] 
   ;(let [mesh-ids (filter (comp not nil?) (map (fn [x] (mesh-id x)) mesh-terms))
         ;mesh-matches (into {} (map #(get (ontology :mesh->doid) %) mesh-ids))]
@@ -84,33 +81,39 @@
   (. @tokens addAll string))
 
 (defn emit-feature-vector [abstract] 
-  (let [num-features    (.size @tokens)
-        feature-vector  (make-array java.lang.String num-features)]
-    (dotimes [n num-features]
-      (aset feature-vector n (str n ":" (as-num (contains? abstract (nth (token-vec) n))))))
-    (strs/join " " (vec feature-vector))))
+  (loop [words abstract features (transient [])]
+    (if (empty? words)
+      (sort (persistent! features))
+      (recur (rest words) (conj! features [(inc (java.util.Arrays/binarySearch @tokens (first words))) 1.0])))))
 
-(defn emit-rows [entry] 
-  (when ((comp not nil? val) entry)
-    (let [doid (key entry)
-          abstract (val entry)]
-      (str doid " " (emit-feature-vector abstract) "\n"))))
+(defn emit-row [prefix entry] 
+  (if (not (empty? (val entry)))
+    (str prefix " " (strs/join " " (map #(strs/join ":" %) (emit-feature-vector (val entry)))) "\n")
+    ""))
 
-(defn write-svmlight [entries] 
-  (with-open [wtr (io/writer (io/file "dataset/" "data.svm"))]
-    (doseq [entry entries] (.write wtr (emit-rows entry)))))
+(defn write-libsvm [data]
+  (let [abstracts (data :text)
+        index (data :index)
+        feat# (fn [entry] (.indexOf (data :feats) (get index (key entry))))]
+    (with-open [wtr (io/writer "dataset/data.svm")]
+      (doseq [abstract abstracts] (.write wtr (emit-row (feat# abstract) abstract))))))
 
 (defn abstract-tokens [pmid]
-  (tok/tokenize (wcar (car/hget "abstracts" pmid))))
+  (set (tok/tokenize (wcar (car/hget "abstracts" pmid)))))
 
 (defn reverse-map [m]
   (into {} (map (fn [a] (into {} (map (fn [b] (assoc {} b (key a))) (val a)))) m)))
 
 (defn -main [& args]
-  (let [doids args
+  (let [doids (vec args)
         doid->pmids (into {} (map #(assoc {} % (wcar (car/smembers %))) doids))
         pmids->doid (reverse-map doid->pmids) 
         pmids (flatten (vals doid->pmids))
-        abstracts (map (fn [x] (assoc {} (val x) (abstract-tokens (key x)))) pmids->doid)]
-    (doall (map add-tokens (vals abstracts)))
-    (write-svmlight abstracts)))
+        abstracts (into {} (map (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
+    (do 
+      (doall (map add-tokens (vals abstracts)))
+      (def tokens (atom (.toArray @tokens))) ; nastry redefinition ... will figure out how to do it proper
+      (println (str "Processing " (count pmids) " publications with a feature dimensionality of " (count @tokens))) 
+      (write-libsvm {:text abstracts :feats doids :index pmids->doid}))
+      (shutdown-agents)
+    ))
