@@ -53,20 +53,22 @@
   ontology))
 
 (def disease-ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
-(def tokens (atom (ConcurrentSkipListSet.)))
+(def tokens)
 (defn- as-num [bool] 
   (if bool 
     1.0
     0.0))
 
-(defn- add-tokens [string]
-  (. @tokens addAll string))
+(defn indexed-token-map [word-bags] 
+  (let [bag (ConcurrentSkipListSet.)]
+    (do (doall (map #(. bag addAll %) word-bags))
+      (into {} (map-indexed (fn [idx itm] [itm idx]) (.toArray bag))))))
 
 (defn emit-feature-vector [abstract] 
   (loop [words abstract features (transient [])]
     (if (empty? words)
       (sort (persistent! features))
-      (recur (rest words) (conj! features [(inc (java.util.Arrays/binarySearch @tokens (first words))) 1.0])))))
+      (recur (rest words) (conj! features [(inc (get @tokens (first words))) 1.0])))))
 
 (defn emit-row [prefix entry] 
   (if (not (empty? (val entry)))
@@ -93,13 +95,11 @@
         doid->pmids (into {} (map #(assoc {} % (wcar (car/smembers %))) doids))
         pmids->doid (reverse-map doid->pmids) 
         pmids (flatten (vals doid->pmids))
-        abstracts (into {} (map (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
+        abstracts (into {} (pmap (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
     (when (or (:help options) (empty? args))
       (println banner)
-      (println "Supply all the DOIDs as remaining values")
       (System/exit 0)) 
-    (doall (map add-tokens (vals abstracts)))
-    (def tokens (atom (.toArray @tokens))) ; nastry redefinition ... will figure out how to do it proper
+    (def tokens (atom (indexed-token-map (vals abstracts))))
     (println (str "Processing " (count pmids) " publications with a feature dimensionality of " (count @tokens))) 
     (write-libsvm {:out (options :file) :text abstracts :feats doids :index pmids->doid}))
   (shutdown-agents))
