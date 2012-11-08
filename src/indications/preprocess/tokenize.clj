@@ -3,6 +3,8 @@
   (:import (org.apache.lucene.analysis.standard StandardTokenizer 
                                                 StandardAnalyzer)
            java.io.StringReader
+           java.util.concurrent.ConcurrentSkipListSet
+           java.util.Arrays
            (org.apache.lucene.analysis.en KStemFilter)
            (org.apache.lucene.util Version)
            (org.apache.lucene.analysis.tokenattributes CharTermAttribute)
@@ -38,8 +40,15 @@
   [tokens]
   (filter #(re-matches #"([a-z]+)(.*)" %) tokens))
 
+(defn indexed-token-map [word-bags] 
+  "Returns a hashmap with the words as keys and their relative index (sorted) as value"
+  (let [bag (ConcurrentSkipListSet.)]
+    (do (doall (map #(. bag addAll %) word-bags))
+      (into {} (map-indexed (fn [idx itm] [itm idx]) (.toArray bag))))))
+
 (defn tokenize 
   "Tokenizes a string using the Lucene StandardAnalyzer and StandardTokenizer
-  Lowercases string and removes words containing only non-alpha characters" 
+  Lowercases string and removes words containing only non-alpha characters
+  Returns a set" 
   [string]
-  (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string))))))
+  (set (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))))
