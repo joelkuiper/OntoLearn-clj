@@ -25,7 +25,7 @@
   (let [pmid (num (Integer/parseInt (xp/$x:text? ".//MedlineCitation/PMID" node)))]
     (if (= (wcar (car/sismember "all" pmid)) 0)
       (let [mesh-terms (xp/$x:text* ".//MeshHeading//DescriptorName" node)
-            disease-ids (doids mesh-terms)
+            disease-ids (doids ontology mesh-terms)
             title (apply str (xp/$x:text* ".//ArticleTitle" node))
             abstracts (xp/$x:text* ".//Abstract/AbstractText" node)]
         (do (wcar (doall (map (fn [doid] 
@@ -56,9 +56,11 @@
       (import-publications (get-publications (first files)))
       (recur (rest files)))))
 
-(defn import-directory [directory]
+(defn import-directory [ontology directory]
   (let [files (file-seq (io/as-file directory))]
     (if (empty? files)
       (println "Please supply a valid directory with PubMed XML files") 
-      (import-files (rest files)))))
+      (do 
+        (swap! ontology assoc :mesh->doid (mesh-index ontology))
+        (import-files (rest files))))))
 

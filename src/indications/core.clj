@@ -33,14 +33,22 @@
 (defn abstract-tokens [pmid]
   (tok/tokenize (abstract pmid)))
 
+(defn pmids [doid depth] 
+  (let [get-pmids (fn [doid] (members (str "doid:" doid)))
+        elements (get-pmids doid)]
+    (if (>= depth 0)
+      (flatten (conj (map #(get-pmids %) (children [doid] depth (transient []))) elements))
+      elements)))
+
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "File to output the libsvn data" :default "dataset/data.libsvm"]
-                                        ["-h" "--help" "Show help" :default false :flag true]) 
+                                        ["-h" "--help" "Show help" :default false :flag true]
+                                        ["-d" "--depth" "Include PMIDs of DOID children till depth n" :default 0 :parse-fn #(Integer. %)]) 
         doids (vec args)
-        doid->pmids (into {} (map #(assoc {} % (members (str "doid:" %))) doids))
+        doid->pmids (into {} (map #(assoc {} % (pmids % (options :depth))) doids))
         pmids->doid (deep-reverse-map doid->pmids) 
         pmids (flatten (vals doid->pmids))
-        abstracts (into {} (pmap (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
+        abstracts (into {} (map (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
     (when (or (:help options) (empty? args))
       (println banner)
       (System/exit 0)) 
