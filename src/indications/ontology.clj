@@ -1,5 +1,4 @@
 (ns indications.ontology
-  (:gen-class)
   (:require [clojure.java.io :as io])
   (:use     [indications.util]
             [indications.database])
@@ -38,13 +37,17 @@
 (defn accessions [terms] 
   (map #(. % getAccession) terms))
 
-(defn- -children [doids depth acc]
+(defn- -traverse [doids depth direction acc]
   (if (== depth 0) 
     (flatten (persistent! acc))
-    (let [childs (reduce into '() (map (fn [d] (map (memfn getAccession) (.getChildren (@ontology :service) (@ontology :accession) d))) doids))]
-      (recur (vec childs) (dec depth) (conj! acc childs)))))
-(defn children [doids depth]
-  (-children doids depth (transient [])))
+    (let [childs (reduce into '() (map (fn [d] (map (memfn getAccession) (direction d))) doids))]
+      (recur (vec childs) (dec depth) direction (conj! acc childs)))))
+
+(defn ontological-children [doids depth]
+  (-traverse doids depth (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient [])))
+
+(defn ontological-parents [doids depth]
+  (-traverse doids (java.lang.Math/abs depth) (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient [])))
 
 (defn annotations [annotation terms]
   (annotations-int ontology annotation terms))

@@ -1,6 +1,5 @@
 (ns indications.preprocess.tokenize
   (:require [clojure.string :as strs])
-  (:gen-class)
   (:import (org.apache.lucene.analysis.standard StandardTokenizer 
                                                 StandardAnalyzer)
            java.io.StringReader

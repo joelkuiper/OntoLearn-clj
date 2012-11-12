@@ -47,11 +47,11 @@
 (defn pmids [doid depth] 
   (let [get-pmids (fn [doid] (members (str "doid:" doid)))
         elements (get-pmids doid)]
-    (if (>= depth 0)
-      (flatten (conj (map #(get-pmids %) (children [doid] depth)) elements))
-      elements)))
+    (cond (>= depth 0) (flatten (conj (map #(get-pmids %) (ontological-children [doid] depth)) elements))
+          (<= depth 0) (flatten (conj (map #(get-pmids %) (ontological-parents [doid] depth)) elements))
+          (== depth 0) elements)))
 
-(defn abstracts
+(defn abstracts-as-tokens
   [pmids]
   (loop [ids pmids acc (transient {})]
     (if (empty? ids)
@@ -66,11 +66,12 @@
         doid->pmids (into {} (map (fn [doid] [doid (pmids doid (options :depth))]) doids))
         pmids->doid (invert-map doid->pmids) 
         pmids (keys pmids->doid)
-        abstracts (abstracts pmids)]
+        abstracts (abstracts-as-tokens pmids)]
     (when (or (:help options) (empty? args))
       (println banner)
       (System/exit 0)) 
-    (do 
+    (do
+      (println "Intializing token map and preprocessing data") 
       (def tokens (atom (tok/indexed-token-map (vals abstracts))))
       (def -tf-idf (tf-idf (count pmids)))
       (println (str "Processing " (count pmids) " publications with a feature length of " (count @tokens)))
