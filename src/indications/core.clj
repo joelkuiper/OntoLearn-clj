@@ -1,8 +1,8 @@
 (ns indications.core
   (:use     [indications.database]
-            [indications.ontology] 
-            [indications.util]
-            [clojure.tools.cli :only [cli]])
+        [indications.ontology] 
+        [indications.util]
+        [clojure.tools.cli :only [cli]])
   (:require [clojure.java.io :as io]
             [clojure.set :as s]
             [clojure.string :as strs]
@@ -42,8 +42,8 @@
 
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "File to output the libsvn data" :default "dataset/data.libsvm"]
-                                        ["-h" "--help" "Show help" :default false :flag true]
-                                        ["-d" "--depth" "Include PMIDs of DOID children till depth n" :default 0 :parse-fn #(Integer. %)]) 
+                                   ["-h" "--help" "Show help" :default false :flag true]
+                                   ["-d" "--depth" "Include PMIDs of DOID children till depth n" :default 0 :parse-fn #(Integer. %)]) 
         doids (vec args)
         doid->pmids (into {} (map #(assoc {} % (pmids % (options :depth))) doids))
         pmids->doid (deep-reverse-map doid->pmids) 
