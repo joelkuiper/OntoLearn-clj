@@ -8,7 +8,8 @@
                               OntologyService$SearchOptions
                               ols.OlsOntologyService
                               bioportal.BioportalOntologyService
-                              file.ReasonedFileOntologyService)))
+                              file.ReasonedFileOntologyService
+                              file.FileOntologyService)))
 
 (defn- annotations-int [ontology annotation terms] 
   (seq (first (map #(get % annotation)
@@ -32,22 +33,18 @@
                   :accession id}]
     ontology))
 
-(def ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
-
-(defn- synonyms-int [ontology accession]
-  (seq (. (ontology :service) getSynonyms (ontology :accession) accession)))
-
-(defn synonyms [accession] 
-  (synonyms-int ontology accession))
+(defonce ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
 
 (defn accessions [terms] 
   (map #(. % getAccession) terms))
 
-(defn children [doids depth acc]
+(defn- -children [doids depth acc]
   (if (== depth 0) 
     (flatten (persistent! acc))
     (let [childs (reduce into '() (map (fn [d] (map (memfn getAccession) (.getChildren (@ontology :service) (@ontology :accession) d))) doids))]
       (recur (vec childs) (dec depth) (conj! acc childs)))))
+(defn children [doids depth]
+  (-children doids depth (transient [])))
 
 (defn annotations [annotation terms]
   (annotations-int ontology annotation terms))

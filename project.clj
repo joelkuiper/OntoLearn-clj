@@ -11,8 +11,8 @@
                  [org.apache.lucene/lucene-core "4.0.0-BETA"]
                  [org.apache.lucene/lucene-analyzers-common "4.0.0-BETA"]]
   :repositories {"drugis.org" "http://drugis.org/mvn/"
-                 "project" "file:repo"
                  "java maven" "http://repo2.maven.org/maven2/"}
   :main         indications.core
+  :aot          :all
   :jvm-ops      ["-Xmx2g" "--server"])
 

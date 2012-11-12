@@ -9,5 +9,19 @@
      (alter-var-root (var ~fn-name) memoize)
      (var ~fn-name)))
 
-(defn deep-reverse-map [m]
-  (into {} (map (fn [a] (into {} (map (fn [b] (assoc {} b (key a))) (val a)))) m)))
+(defn invert-list-entry [entry] (map (fn [k] [k (key entry)]) (val entry)))
+
+(defn invert-map
+  [list-map]
+  (let [values (mapcat invert-list-entry list-map)]
+    (loop [entries values acc (transient {})]
+      (if (empty? entries) 
+        (persistent! acc)
+      (let [entry (first entries) 
+            k (first entry)
+            v (second entry)
+            curr (acc k)]
+        (if (nil? curr) 
+          (recur (rest entries) (assoc! acc k [v]))
+          (recur (rest entries) (assoc! acc k (conj curr v)))))))))
+

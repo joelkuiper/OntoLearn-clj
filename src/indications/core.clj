@@ -1,7 +1,9 @@
 (ns indications.core
-  (:use     [indications.database]
+  (:gen-class)
+  (:use [indications.database]
         [indications.ontology] 
         [indications.util]
+        [indications.preprocess.tfidf]
         [clojure.tools.cli :only [cli]])
   (:require [clojure.java.io :as io]
             [clojure.set :as s]
@@ -11,48 +13,66 @@
             [indications.import.process :as process])) 
 
 (def tokens)
+(def -tf-idf)
 
 (defn emit-feature-vector [abstract] 
   (loop [words abstract features (transient [])]
     (if (empty? words)
       (sort (persistent! features))
-      (recur (rest words) (conj! features [(inc (get @tokens (first words))) 1.0])))))
+      (let [entry (first words)
+            word (key entry)
+            docs-with-term# (:count (@tokens word))
+            occ# (val entry)
+            token# (count abstract)]
+        (recur (rest words) (conj! features [(inc (:index (@tokens word))) (-tf-idf occ# token# docs-with-term#)]))))))
 
 (defn emit-row [prefix entry] 
-  (if (not (empty? (val entry)))
-    (str prefix " " (strs/join " " (map #(strs/join ":" %) (emit-feature-vector (val entry)))) "\n")
-    ""))
+  (let [tokens (val entry)]
+    (if (not (empty? (keys tokens)))
+      (str prefix " " (strs/join " " (map #(strs/join ":" %) (emit-feature-vector tokens))) "\n")
+      "")))
 
 (defn write-libsvm [data]
   (let [abstracts (data :text)
         index (data :index)
-        feat# (fn [entry] (.indexOf (data :feats) (get index (key entry))))]
+        feat#s (fn [entry] (map #(.indexOf (data :feats) %) (get index entry)))]
     (with-open [wtr (io/writer (data :out))]
-      (doseq [abstract abstracts] (.write wtr (emit-row (feat# abstract) abstract))))))
+      (doseq [abstract abstracts] 
+        (doseq [feat# (feat#s (key abstract))] 
+          (.write wtr (emit-row feat# abstract)))))))
 
 (defn abstract-tokens [pmid]
-  (tok/tokenize (abstract pmid)))
+  (tok/token-count (tok/tokenize (abstract pmid))))
 
 (defn pmids [doid depth] 
   (let [get-pmids (fn [doid] (members (str "doid:" doid)))
         elements (get-pmids doid)]
     (if (>= depth 0)
-      (flatten (conj (map #(get-pmids %) (children [doid] depth (transient []))) elements))
+      (flatten (conj (map #(get-pmids %) (children [doid] depth)) elements))
       elements)))
+
+(defn abstracts
+  [pmids]
+  (loop [ids pmids acc (transient {})]
+    (if (empty? ids)
+      (persistent! acc)
+      (recur (rest ids) (assoc! acc (first ids) (abstract-tokens (first ids)))))))
 
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "File to output the libsvn data" :default "dataset/data.libsvm"]
                                    ["-h" "--help" "Show help" :default false :flag true]
                                    ["-d" "--depth" "Include PMIDs of DOID children till depth n" :default 0 :parse-fn #(Integer. %)]) 
         doids (vec args)
-        doid->pmids (into {} (map #(assoc {} % (pmids % (options :depth))) doids))
-        pmids->doid (deep-reverse-map doid->pmids) 
-        pmids (flatten (vals doid->pmids))
-        abstracts (into {} (map (fn [x] (assoc {} x (abstract-tokens x))) pmids))]
+        doid->pmids (into {} (map (fn [doid] [doid (pmids doid (options :depth))]) doids))
+        pmids->doid (invert-map doid->pmids) 
+        pmids (keys pmids->doid)
+        abstracts (abstracts pmids)]
     (when (or (:help options) (empty? args))
       (println banner)
       (System/exit 0)) 
-    (def tokens (atom (tok/indexed-token-map (vals abstracts))))
-    (println (str "Processing " (count pmids) " publications with a feature dimensionality of " (count @tokens))) 
-    (write-libsvm {:out (options :file) :text abstracts :feats doids :index pmids->doid}))
+    (do 
+      (def tokens (atom (tok/indexed-token-map (vals abstracts))))
+      (def -tf-idf (tf-idf (count pmids)))
+      (println (str "Processing " (count pmids) " publications with a feature length of " (count @tokens)))
+      (write-libsvm {:out (options :file) :text abstracts :feats doids :index pmids->doid})))
   (shutdown-agents))
