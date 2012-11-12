@@ -15,7 +15,7 @@
 (def tokens)
 (def -tf-idf)
 
-(defn emit-feature-vector [abstract] 
+(defn feature-vector [abstract] 
   (loop [words abstract features (transient [])]
     (if (empty? words)
       (sort (persistent! features))
@@ -29,13 +29,13 @@
 (defn emit-row [prefix entry] 
   (let [tokens (val entry)]
     (if (not (empty? (keys tokens)))
-      (str prefix " " (strs/join " " (map #(strs/join ":" %) (emit-feature-vector tokens))) "\n")
+      (str prefix " " (strs/join " " (map #(strs/join ":" %) (feature-vector tokens))) "\n")
       "")))
 
 (defn write-libsvm [data]
   (let [abstracts (data :text)
         index (data :index)
-        feat#s (fn [entry] (map #(.indexOf (data :feats) %) (get index entry)))]
+        feat#s (fn [entry] (map #(inc (.indexOf (data :feats) %)) (get index entry)))]
     (with-open [wtr (io/writer (data :out))]
       (doseq [abstract abstracts] 
         (doseq [feat# (feat#s (key abstract))] 

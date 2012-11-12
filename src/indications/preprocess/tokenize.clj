@@ -54,7 +54,7 @@
 (defn indexed-token-map [word-bags] 
   "Returns a hashmap with the words as keys and their relative index (sorted) as value"
   (let [bag (ConcurrentSkipListMap.)]
-    (do (doall (map #(add-word-bag! bag %) word-bags))
+    (do (doall (pmap #(add-word-bag! bag %) word-bags))
       (into {} (map-indexed (fn [idx itm] [(key itm) {:index idx :count (val itm)}]) (. bag entrySet))))))
 
 (defn token-count [token-seq]
@@ -72,4 +72,4 @@
   Lowercases string and removes words containing only non-alpha characters
   Returns a set" 
   [string]
-  (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string))))))
+  (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))
