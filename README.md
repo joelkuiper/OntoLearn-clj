@@ -1,7 +1,7 @@
 **This is work in process and definitely not something you'd want to use in
 production**
 
-# Clojure PubMed utility
+# Clojure PubMed to LibSVM utility
 
 Collection of utilities for retrieving and processing [PubMed](http://www.ncbi.nlm.nih.gov/pubmed/) files into to [LibSVM](http://www.csie.ntu.edu.tw/~cjlin/libsvm/) data format. 
 
@@ -9,7 +9,7 @@ Used for matching ontologies to MeSH annotated articles and inferring labels
 for those not annotated using Support Vector Machines with linear kernel.
 
 Specifically used with [Human Disease Ontology](http://www.disease-ontology.org/)
-with Randomized Clinical Trials.
+with on a large (5 GB) collection Randomized Clinical Trials.
 
 ## Usage
 
