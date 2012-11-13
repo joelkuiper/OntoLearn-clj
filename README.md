@@ -1,4 +1,4 @@
-**This is work in process and definitely not something you'd want to use in
+**This is work in process and getting up to speed with Clojure. Definitely not something you'd want to use in
 production**
 
 # Clojure PubMed to LibSVM utility
