@@ -13,6 +13,4 @@
   :repositories {"drugis.org" "http://drugis.org/mvn/"
                  "java maven" "http://repo2.maven.org/maven2/"}
   :main         indications.core
-  :aot          :all
-  :jvm-ops      ["-Xmx2g" "--server"])
-
+  :jvm-ops      ["-Xmx4g" "--server"])
