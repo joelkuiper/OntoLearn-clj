@@ -1,6 +1,6 @@
 (ns indications.preprocess.tfidf
   (:import [java.lang.Double]
-            [java.lang.Math]))
+           [java.lang.Math]))
 
 (defn tf-idf [doc#]
   "See http://en.wikipedia.org/wiki/Tf%E2%80%93idf"

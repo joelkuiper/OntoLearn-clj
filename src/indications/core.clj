@@ -64,7 +64,7 @@
                                    ["-d" "--depth" "Include PMIDs of DOID children till depth n" :default 0 :parse-fn #(Integer. %)]) 
         doids (vec args)
         doid->pmids (into {} (map (fn [doid] [doid (pmids doid (options :depth))]) doids))
-        pmids->doid (invert-map doid->pmids) 
+        pmids->doid (deep-invert-map doid->pmids) 
         pmids (keys pmids->doid)
         abstracts (abstracts-as-tokens pmids)]
     (when (or (:help options) (empty? args))

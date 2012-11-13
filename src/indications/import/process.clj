@@ -1,7 +1,7 @@
 (ns indications.import.process
   (:use     [indications.util]
-        [indications.database]
-        [indications.ontology])
+            [indications.database]
+            [indications.ontology])
   (:require [clojure.java.io :as io]
             [clojure.string  :as strs]
             [clj-xpath.core :as xp :only [$x $x:text? $x:text*]]
@@ -19,7 +19,6 @@
 (defn import-mesh [file]
   (with-open [in-file (io/reader (io/resource file))] 
     (doall (import-mesh-terms (csv/read-csv in-file)))))
-
 
 (defn- import-publication [node] 
   (let [pmid (num (Integer/parseInt (xp/$x:text? ".//MedlineCitation/PMID" node)))]
@@ -49,8 +48,7 @@
     (map data.xml/emit-str)))
 
 (defn- import-files [files] 
-  (if (empty? files) 
-    true
+  (when (not (empty? files))
     (do 
       (println (str "importing " (first files)))
       (import-publications (get-publications (first files)))

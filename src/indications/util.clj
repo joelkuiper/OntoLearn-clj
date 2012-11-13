@@ -11,7 +11,7 @@
 
 (defn invert-list-entry [entry] (map (fn [k] [k (key entry)]) (val entry)))
 
-(defn invert-map
+(defn deep-invert-map
   [list-map]
   (let [values (mapcat invert-list-entry list-map)]
     (loop [entries values acc (transient {})]

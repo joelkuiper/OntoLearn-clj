@@ -9,7 +9,7 @@ Used for matching ontologies to MeSH annotated articles and inferring labels
 for those not annotated using Support Vector Machines with linear kernel.
 
 Specifically used with [Human Disease Ontology](http://www.disease-ontology.org/)
-with on a large (5 GB) collection Randomized Clinical Trials.
+with a large-isch (5 GB) collection Randomized Clinical Trials.
 
 ## Usage
 
