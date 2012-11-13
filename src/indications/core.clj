@@ -75,5 +75,6 @@
       (def tokens (atom (tok/indexed-token-map (vals abstracts))))
       (def -tf-idf (tf-idf (count pmids)))
       (println (str "Processing " (count pmids) " publications with a feature length of " (count @tokens)))
+      (doall (map (fn [doid] (println (str "Feature " doid " with " (count (doid->pmids doid)) " abstracts")) doids))) 
       (write-libsvm {:out (options :file) :text abstracts :feats doids :index pmids->doid})))
   (shutdown-agents))
