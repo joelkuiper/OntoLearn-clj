@@ -20,7 +20,10 @@
     (.tokenStream sa nil sr)))
 
 (defn- stem-filter 
-  "See 'Viewing Morphology as an Inference Process' (Krovetz, R., Proceedings of the Sixteenth Annual International ACM SIGIR Conference on Research and Development in Information Retrieval, 191-203, 1993)."
+  "See 'Viewing Morphology as an Inference Process' 
+  (Krovetz, R., Proceedings 
+  of the Sixteenth Annual International ACM SIGIR Conference on 
+  Research and Development in Information Retrieval, 191-203, 1993)."
   [tk]
   (KStemFilter. tk))
 
