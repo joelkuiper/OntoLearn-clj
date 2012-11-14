@@ -45,35 +45,15 @@
   [tokens]
   (filter #(re-matches #"([a-z]+)(.*)" %) tokens))
 
-(defn- add-word-bag! [c kvs]
-  (doall 
-    (map (fn [kv] 
-           (let [k (key kv)
-                 v (val kv)
-                 curr (get c k)]
-             (if (nil? curr)
-              (. c put k 1) 
-              (. c put k (+ v 1))))) kvs))) 
+(defn map-count [map key] 
+  (assoc map key (inc (get map key 0))))
 
-(defn indexed-token-map [word-bags] 
-  "Returns a hashmap with the words as keys and their relative index (sorted) as value"
-  (let [bag (ConcurrentSkipListMap.)]
-    (do (doall (pmap #(add-word-bag! bag %) word-bags))
-      (into {} (map-indexed (fn [idx itm] [(key itm) {:index idx :count (val itm)}]) (. bag entrySet))))))
-
-(defn token-count [token-seq]
-  (loop [tokens token-seq counts (transient {})]
-    (if (empty? tokens)
-      (persistent! counts)
-      (let [token (first tokens)
-            curr (get counts token)]
-        (if (nil? curr)
-          (recur (rest tokens) (assoc! counts token 1))
-          (recur (rest tokens) (assoc! counts token (+ curr 1))))))))
+(defn token-count [tokens] 
+  (reduce map-count {} tokens))
 
 (defn tokenize 
   "Tokenizes a string using the Lucene StandardAnalyzer and StandardTokenizer
   Lowercases string and removes words containing only non-alpha characters
   Returns a set" 
   [string]
-  (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))
+  (set (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))))
