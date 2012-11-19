@@ -9,6 +9,8 @@
                               bioportal.BioportalOntologyService
                               file.ReasonedFileOntologyService
                               file.FileOntologyService)))
+(defstruct Ontology :service :accession)
+(def ontology (atom {})) 
 
 (defn- annotations-int [ontology annotation terms] 
   (seq (first (map #(get % annotation)
@@ -26,30 +28,28 @@
               mapping (into {} (map #(assoc {} % doid) xrefs))]
           (recur (inc idx) (conj! mesh->doid mapping)))))))
 
-(defn create-ontology [file id & options]
-  (let [ontology {:service (ReasonedFileOntologyService.
-                             (java.net.URI. (.toString (io/as-url file))) id)
-                  :accession id}]
-    ontology))
-
-(defonce ontology (atom (create-ontology (io/resource "../resources/HumanDO.obo") "DOID")))
+(defn create-ontology! [file id & options]
+  (let [onto (struct Ontology (ReasonedFileOntologyService.
+            (java.net.URI. (.toString (io/as-url file))) id) id)]
+    (reset! ontology onto)
+    onto))
 
 (defn accessions [terms] 
   (map #(. % getAccession) terms))
 
-(defn- -traverse [doids depth direction acc]
-  (if (== depth 0) 
-    (flatten (persistent! acc))
+(defn- -traverse [doids depth counter direction acc]
+  (if (== depth counter) 
+    (persistent! acc)
     (let [childs (reduce into [] (map (fn [d] (map (memfn getAccession) (direction d))) doids))]
-      (recur (vec childs) (dec depth) direction (conj! acc childs)))))
+      (recur (vec childs) depth (inc counter) direction (assoc! acc counter childs)))))
 
 (defn ontological-children [doids depth]
-  (-traverse doids depth 
-             (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient [])))
+  (-traverse doids depth 0
+             (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})))
 
 (defn ontological-parents [doids depth]
-  (-traverse doids (java.lang.Math/abs depth) 
-             (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient [])))
+  (-traverse doids (java.lang.Math/abs depth) 0 
+             (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient {})))
 
 (defn annotations [annotation terms]
   (annotations-int ontology annotation terms))

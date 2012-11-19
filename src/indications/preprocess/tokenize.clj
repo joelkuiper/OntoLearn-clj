@@ -49,11 +49,11 @@
   (assoc map key (inc (get map key 0))))
 
 (defn token-count [tokens] 
-  (reduce map-count {} tokens))
+  (reduce map-count (sorted-map) tokens))
 
 (defn tokenize 
   "Tokenizes a string using the Lucene StandardAnalyzer and StandardTokenizer
   Lowercases string and removes words containing only non-alpha characters
   Returns a set" 
   [string]
-  (set (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))))
+  (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))
