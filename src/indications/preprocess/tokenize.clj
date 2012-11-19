@@ -56,4 +56,4 @@
   Lowercases string and removes words containing only non-alpha characters
   Returns a set" 
   [string]
-  (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string)))))
+  (only-words (token-seq (stem-filter (analyzed-token-stream (strs/lower-case string))))))
