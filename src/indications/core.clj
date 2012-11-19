@@ -12,8 +12,11 @@
             [indications.import.retrieve :as pubmed]
             [indications.import.process :as process])) 
 
+(defn-memo abstract-tokens [pmid] 
+  (tok/tokenize (abstract pmid)))
+
 (defn tokens [pmid]
-  (tok/token-count (tok/tokenize (abstract pmid))))
+  (tok/token-count (abstract-tokens pmid)))
 
 (def index-of
   (let [m (atom {})]
@@ -34,14 +37,17 @@
 (defn main [file depth doids]
   (create-ontology! (io/resource "../resources/HumanDO.obo") "DOID")
   (let [class# (fn [classifier] (inc (.indexOf doids classifier)))
-        transformer (fn [tokens token] (tf token (get tokens (key token)) (count tokens)))]
+        documents (map #(set (abstract-tokens %)) (pmids (flatten (vals (ontological-children doids depth)))))
+        documents# (count documents)
+        term-in-documents# (memoize (fn [term] (count (filter #(contains? % term) documents))))
+        transformer (fn [tokens token] (tf-idf (get tokens (key token)) (count tokens) (term-in-documents# (key token)) documents#))]
     (doseq [doid doids]
-      (let [levels (assoc (ontological-children [doid] depth) 0 [doid])
+      (let [levels (ontological-children [doid] depth)
             levels->pmids (into {} (map (fn [[k v]] {k (pmids v)}) levels))]
         (doseq [[level pmids] levels->pmids] 
-          (println (str doid " @ " level " with " (count pmids)))
-          (with-open [wtr (io/writer (str file "/" level ".libsvm") :append true)]
-            (doall (map (fn [pmid] (.write wtr (emit-row (class# (name doid)) (tokens pmid) transformer))) pmids))))))))
+            (println (str doid " @ " level " with " (count pmids)))
+            (with-open [wtr (io/writer (str file "/" level ".libsvm") :append true)]
+              (doall (map (fn [pmid] (.write wtr (emit-row (class# (name doid)) (tokens pmid) transformer))) pmids))))))))
 
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "Directory to output the libsvn data without trailing slash" :default "dataset/libsvm"]

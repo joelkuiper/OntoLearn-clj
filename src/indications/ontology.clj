@@ -44,12 +44,12 @@
       (recur (vec childs) depth (inc counter) direction (assoc! acc counter childs)))))
 
 (defn ontological-children [doids depth]
-  (-traverse doids depth 1
-             (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})))
+  (assoc (-traverse doids depth 1
+             (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})) 0 doids))
 
 (defn ontological-parents [doids depth]
-  (-traverse doids (java.lang.Math/abs depth) 1 
-             (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient {})))
+  (assoc (-traverse doids (java.lang.Math/abs depth) 1 
+             (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient {})) 0 doids))
 
 (defn annotations [annotation terms]
   (annotations-int ontology annotation terms))
