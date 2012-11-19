@@ -37,10 +37,11 @@
 (defn main [file depth doids]
   (create-ontology! (io/resource "../resources/HumanDO.obo") "DOID")
   (let [class# (fn [classifier] (inc (.indexOf doids classifier)))
-        documents (map #(set (abstract-tokens %)) (pmids (flatten (vals (ontological-children doids depth)))))
-        documents# (count documents)
-        term-in-documents# (memoize (fn [term] (count (filter #(contains? % term) documents))))
-        transformer (fn [tokens token] (tf-idf (get tokens (key token)) (count tokens) (term-in-documents# (key token)) documents#))]
+        ;documents (map #(set (abstract-tokens %)) (pmids (flatten (vals (ontological-children doids depth)))))
+        ;documents# (count documents)
+        ;term-in-documents# (memoize (fn [term] (count (filter #(contains? % term) documents))))
+        ;transformer (fn [tokens token] (tf-idf (get tokens (key token)) (count tokens) (term-in-documents# (key token)) documents#))]
+        transformer (fn [tokens token] 1.0)]
     (doseq [doid doids]
       (let [levels (ontological-children [doid] depth)
             levels->pmids (into {} (map (fn [[k v]] {k (pmids v)}) levels))]
