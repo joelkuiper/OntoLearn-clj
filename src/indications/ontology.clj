@@ -38,17 +38,17 @@
   (map #(. % getAccession) terms))
 
 (defn- -traverse [doids depth counter direction acc]
-  (if (== depth counter) 
+  (if (== depth (- counter 1)) 
     (persistent! acc)
     (let [childs (reduce into [] (map (fn [d] (map (memfn getAccession) (direction d))) doids))]
       (recur (vec childs) depth (inc counter) direction (assoc! acc counter childs)))))
 
 (defn ontological-children [doids depth]
-  (-traverse doids depth 0
+  (-traverse doids depth 1
              (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})))
 
 (defn ontological-parents [doids depth]
-  (-traverse doids (java.lang.Math/abs depth) 0 
+  (-traverse doids (java.lang.Math/abs depth) 1 
              (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient {})))
 
 (defn annotations [annotation terms]

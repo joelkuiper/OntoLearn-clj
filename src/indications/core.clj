@@ -18,55 +18,30 @@
 (def index-of
   (let [m (atom {})]
     (fn [token]
-      (get (swap! m #(assoc % token (or (% token) (inc (count %)))))
-           token))))
-
-(defn doids->pmids
-  [doids]
-  (mapcat #(members (str "doid:" %)) doids))
-
-(defn doids->tokens 
-  [doids]
-  (map tokens (doids->pmids doids)))
+      (get (swap! m #(assoc % token (or (% token) (inc (count %))))) token))))
 
 (defn tokens->feature [tokens transform]
   (sort (map (fn [token] [(index-of (key token)) (transform tokens token)]) tokens)))
 
-(defn doids->elements 
-  [doids & [depth]]
-  (let [doids->levels (into {} (map (fn [doid] {(keyword doid) (ontological-children [doid] depth)}) doids))]
-    (into {} (map (fn [[k v]] {k (map (fn [[level doids]] {level (doids->tokens doids)}) v)}) doids->levels))))
+(defn emit-row [class tokens transformer]
+  (if ((comp not empty?) tokens)
+    (str class " " (strs/join " " (map #(strs/join ":" %) (tokens->feature tokens transformer))) "\n")
+    ""))
 
-;(defn documents
-  ;[doids->levels] 
-  ;(mapcat (fn [[k v]] (map (fn [x] (flatten (vals x))) v)) doids->levels))
-
-;(defn docs-with-term
-  ;[documents]
-  ;(fn [term] (filter #(contains? % term) documents)))
-
-;(defn tfidf [documents]
-  ;(let [doc# (reduce + (map count documents))
-        ;with-term (docs-with-term (flatten documents))
-        ;tfidf-fn (tf-idf doc#)]
-   ;(fn [abstract term]
-    ;(tfidf-fn (get abstract (key term)) (count abstract) (count (with-term (key term)))))))
-
-(defn emit-row [classifier tokens transformer]
-  (str classifier " " (strs/join " " (map #(strs/join ":" %) (tokens->feature tokens transformer))) "\n"))
+(defn pmids [doids]
+  (mapcat members doids))
 
 (defn main [file depth doids]
   (create-ontology! (io/resource "../resources/HumanDO.obo") "DOID")
-  (let [doids->levels (doids->elements doids depth)
-        class# (fn [classifier] (inc (.indexOf doids classifier)))
-        transfomer (fn [tokens token] 1.0)]
-    (doseq [klass doids->levels]
-      (doseq [level (val klass)]
-        (doseq [feats level] 
-          (with-open [wtr (io/writer (str file "/" (key feats) ".libsvm") :append true)]
-          (doseq [feat (val feats)]
-              (.write wtr (emit-row (class# (name (key klass))) feat transfomer)) 
-              )))))))
+  (let [class# (fn [classifier] (inc (.indexOf doids classifier)))
+        transformer (fn [tokens token] (tf token (get tokens (key token)) (count tokens)))]
+    (doseq [doid doids]
+      (let [levels (assoc (ontological-children [doid] depth) 0 [doid])
+            levels->pmids (into {} (map (fn [[k v]] {k (pmids v)}) levels))]
+        (doseq [[level pmids] levels->pmids] 
+          (println (str doid " @ " level " with " (count pmids)))
+          (with-open [wtr (io/writer (str file "/" level ".libsvm") :append true)]
+            (doall (map (fn [pmid] (.write wtr (emit-row (class# (name doid)) (tokens pmid) transformer))) pmids))))))))
 
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "Directory to output the libsvn data without trailing slash" :default "dataset/libsvm"]
