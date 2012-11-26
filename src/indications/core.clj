@@ -12,6 +12,8 @@
             [indications.import.retrieve :as pubmed]
             [indications.import.process :as process])) 
 
+;(set! *warn-on-reflection* true)
+
 (defn-memo abstract-tokens [pmid] 
   (tok/tokenize (abstract pmid)))
 
@@ -28,11 +30,11 @@
 
 (defn emit-row [class tokens transformer]
   (if ((comp not empty?) tokens)
-    (str class " " (strs/join " " (map #(strs/join ":" %) (tokens->feature tokens transformer))) "\n")
+    (str class " " (strs/join " " (map #(strs/join ":" %) (into-array (tokens->feature tokens transformer)))) "\n")
     ""))
 
 (defn pmids [doids]
-  (mapcat members doids))
+  (mapcat #(members (str "doid:" %)) doids))
 
 (defn main [file depth doids]
   (create-ontology! (io/resource "../resources/HumanDO.obo") "DOID")
@@ -48,7 +50,7 @@
         (doseq [[level pmids] levels->pmids] 
             (println (str doid " @ " level " with " (count pmids)))
             (with-open [wtr (io/writer (str file "/" level ".libsvm") :append true)]
-              (doall (map (fn [pmid] (.write wtr (emit-row (class# (name doid)) (tokens pmid) transformer))) pmids))))))))
+              (doall (map (fn [pmid] (.write wtr ^String (emit-row (class# (name doid)) (tokens pmid) transformer))) pmids))))))))
 
 (defn -main [& args]
   (let [[options args banner] (cli args ["-o" "--file" "Directory to output the libsvn data without trailing slash" :default "dataset/libsvm"]

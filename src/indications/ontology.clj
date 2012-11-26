@@ -1,4 +1,5 @@
 (ns indications.ontology
+  (:gen-class)
   (:require [clojure.java.io :as io])
   (:use     [indications.util]
             [indications.database])
@@ -34,30 +35,32 @@
     (reset! ontology onto)
     onto))
 
+(defn accession [^OntologyTerm term] (.getAccession term))
+
 (defn accessions [terms] 
-  (map #(. % getAccession) terms))
+  (map #(accession %) terms))
 
 (defn- -traverse [doids depth counter direction acc]
   (if (== depth (- counter 1)) 
     (persistent! acc)
-    (let [childs (reduce into [] (map (fn [d] (map (memfn getAccession) (direction d))) doids))]
+    (let [childs (reduce into [] (map (fn [d] (map accession (direction d))) doids))]
       (recur (vec childs) depth (inc counter) direction (assoc! acc counter childs)))))
 
 (defn ontological-children [doids depth]
   (assoc (-traverse doids depth 1
-             (fn [doid] (. (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})) 0 doids))
+             (fn [doid] (. ^ReasonedFileOntologyService (@ontology :service) getChildren (@ontology :accession) doid)) (transient {})) 0 doids))
 
 (defn ontological-parents [doids depth]
-  (assoc (-traverse doids (java.lang.Math/abs depth) 1 
-             (fn [doid] (. (@ontology :service) getParents (@ontology :accession) doid)) (transient {})) 0 doids))
+  (assoc (-traverse doids (abs depth) 1 
+             (fn [doid] (. ^ReasonedFileOntologyService (@ontology :service) getParents (@ontology :accession) doid)) (transient {})) 0 doids))
 
 (defn annotations [annotation terms]
-  (annotations-int ontology annotation terms))
+  (annotations-int @ontology annotation terms))
 
-(defn doids [ontology mesh-terms] 
-  (if (nil? (ontology :mesh->doid))
+(defn doids [mesh-terms] 
+  (if (nil? (@ontology :mesh->doid))
     (println "Ontology did not provide a mesh->doid map, please initialize with mesh-index")
     (let [mesh-ids (filter (comp not nil?) (map (fn [x] (mesh-id x)) mesh-terms))
-          mesh-matches (into {} (map #(find (ontology :mesh->doid) %) mesh-ids))]
+          mesh-matches (into {} (map #(find (@ontology :mesh->doid) %) mesh-ids))]
       (vec (vals mesh-matches)))))
 

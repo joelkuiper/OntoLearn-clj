@@ -1,0 +1,265 @@
+C26.017;Abdominal Injuries;D000007
+C16.131;Congenital Abnormalities;D000013
+C19.053;Adrenal Gland Diseases;D000307
+C24.080;Agricultural Workers' Diseases;D000382
+C26.062;Amputation, Traumatic;D000673
+C02.081;Arbovirus Infections;D001102
+C26.088;Arm Injuries;D001134
+C26.103;Asphyxia;D001237
+C11.093;Asthenopia;D001248
+C26.115;Athletic Injuries;D001265
+C20.111;Autoimmune Diseases;D001327
+C10.177;Autonomic Nervous System Diseases;D001342
+C01.252;Bacterial Infections;D001424
+C26.120;Barotrauma;D001469
+C06.130;Biliary Tract Diseases;D001660
+C24.125;Bird Fancier's Lung;D001716
+C26.141;Birth Injuries;D001720
+C26.153;Bites and Stings;D001733
+C20.188;Blood Group Incompatibility;D001787
+C05.116;Bone Diseases;D001847
+C19.149;Bone Diseases, Endocrine;D001849
+C01.323;Brain Abscess;D001922
+C08.127;Bronchial Diseases;D001982
+C02.109;Bronchiolitis, Viral;D001990
+C26.200;Burns;D002056
+C25.635;Marijuana Abuse;D002189
+C05.182;Cartilage Diseases;D002357
+C10.228;Central Nervous System Diseases;D002493
+C01.395;Central Nervous System Infections;D002494
+C08.200;Ciliary Motility Disorders;D002925
+C09.150;Ciliary Motility Disorders;D002925
+C11.187;Conjunctival Diseases;D003229
+C17.300;Connective Tissue Diseases;D003240
+C26.248;Contusions;D003288
+C11.204;Corneal Diseases;D003316
+C10.292;Cranial Nerve Diseases;D003389
+C04.182;Cysts;D003560
+C10.314;Demyelinating Diseases;D003711
+C19.246;Diabetes Mellitus;D003920
+C06.198;Digestive System Abnormalities;D004065
+C06.301;Digestive System Neoplasms;D004067
+C26.289;Dislocations;D004204
+C02.256;DNA Virus Infections;D004266
+C26.304;Drowning;D004332
+C19.297;Dwarfism;D004392
+C09.218;Ear Diseases;D004427
+C26.324;Electric Injuries;D004556
+C19.344;Endocrine Gland Neoplasms;D004701
+C26.348;Esophageal Perforation;D004939
+C26.371;Extravasation of Diagnostic and Therapeutic Materials;D005119
+C11.250;Eye Abnormalities;D005124
+C11.290;Eye Hemorrhage;D005130
+C11.297;Eye Injuries;D005131
+C11.300;Eye Manifestations;D005132
+C11.319;Eye Neoplasms;D005134
+C11.338;Eyelid Diseases;D005141
+C05.321;Fasciitis;D005208
+C16.300;Fetal Diseases;D005315
+C05.330;Foot Deformities;D005530
+C05.360;Foot Diseases;D005534
+C26.392;Foreign Bodies;D005547
+C26.417;Frostbite;D005627
+C06.405;Gastrointestinal Diseases;D005767
+C12.294;Genital Diseases, Male;D005832
+C19.391;Gonadal Disorders;D006058
+C20.452;Graft vs Host Disease;D006086
+C04.445;Hamartoma;D006222
+C05.390;Hand Deformities;D006226
+C26.448;Hand Injuries;D006230
+C26.260;Craniocerebral Trauma;D006259
+C14.280;Heart Diseases;D006331
+C03.335;Helminthiasis;D006373
+C15.378;Hematologic Diseases;D006402
+C02.407;Hepatitis, Viral, Animal;D006524
+C02.440;Hepatitis, Viral, Human;D006525
+C24.410;High Pressure Neurological Syndrome;D006610
+C20.543;Hypersensitivity;D006967
+C20.673;Immunologic Deficiency Syndromes;D007153
+C20.683;Immunoproliferative Disorders;D007160
+C24.426;Inert Gas Narcosis;D007222
+C16.614;Infant, Newborn, Diseases;D007232
+C01.539;Infection;D007239
+C03.432;Intestinal Diseases, Parasitic;D007411
+C05.500;Jaw Diseases;D007571
+C07.320;Jaw Diseases;D007571
+C05.550;Joint Diseases;D007592
+C24.506;Laboratory Infection;D007757
+C11.496;Lacrimal Apparatus Diseases;D007766
+C08.360;Laryngeal Diseases;D007818
+C09.400;Laryngeal Diseases;D007818
+C26.558;Leg Injuries;D007869
+C11.510;Lens Diseases;D007905
+C06.552;Liver Diseases;D008107
+C03.518;Liver Diseases, Parasitic;D008109
+C08.381;Lung Diseases;D008171
+C03.582;Lung Diseases, Parasitic;D008174
+C15.604;Lymphatic Diseases;D008206
+C02.587;Meningitis, Viral;D008587
+C18.452;Metabolic Diseases;D008659
+C07.465;Mouth Diseases;D009059
+C26.640;Multiple Trauma;D009104
+C05.651;Muscular Diseases;D009135
+C05.660;Musculoskeletal Abnormalities;D009139
+C01.703;Mycoses;D009181
+C25.675;Opioid-Related Disorders;D009293
+C25.650;Neonatal Abstinence Syndrome;D009357
+C04.557;Neoplasms by Histologic Type;D009370
+C04.588;Neoplasms by Site;D009371
+C04.619;Neoplasms, Experimental;D009374
+C04.626;Neoplasms, Hormone-Dependent;D009376
+C04.651;Neoplasms, Multiple Primary;D009378
+C04.682;Neoplasms, Radiation-Induced;D009381
+C04.697;Neoplastic Processes;D009385
+C04.700;Neoplastic Syndromes, Hereditary;D009386
+C10.500;Nervous System Malformations;D009421
+C10.551;Nervous System Neoplasms;D009423
+C10.597;Neurologic Manifestations;D009461
+C10.668;Neuromuscular Diseases;D009468
+C08.460;Nose Diseases;D009668
+C09.603;Nose Diseases;D009668
+C18.654;Nutrition Disorders;D009748
+C24.270;Dermatitis, Occupational;D009783
+C11.525;Ocular Hypertension;D009798
+C02.597;Opportunistic Infections;D009894
+C03.684;Opportunistic Infections;D009894
+C11.640;Optic Nerve Diseases;D009901
+C11.675;Orbital Diseases;D009916
+C09.647;Otorhinolaryngologic Neoplasms;D010039
+C06.689;Pancreatic Diseases;D010182
+C04.730;Paraneoplastic Syndromes;D010257
+C03.701;Parasitic Diseases, Animal;D010273
+C19.642;Parathyroid Diseases;D010279
+C06.844;Peritoneal Diseases;D010532
+C07.550;Pharyngeal Diseases;D010608
+C09.775;Pharyngeal Diseases;D010608
+C25.700;Phencyclidine Abuse;D010623
+C19.700;Pituitary Diseases;D010900
+C08.528;Pleural Diseases;D010995
+C24.800;Pneumoconiosis;D011009
+C02.705;Pneumonia, Viral;D011024
+C25.723;Poisoning;D011041
+C04.834;Precancerous Conditions;D011230
+C13.703;Pregnancy Complications;D011248
+C14.583;Pregnancy Complications, Cardiovascular;D011249
+C04.850;Pregnancy Complications, Neoplastic;D011252
+C03.752;Protozoan Infections;D011528
+C25.746;Psychoses, Substance-Induced;D011605
+C11.710;Pupil Disorders;D011681
+C20.841;Purpura, Thrombocytopenic;D011696
+C26.733;Radiation Injuries;D011832
+C11.744;Refractive Errors;D012030
+C08.618;Respiration Disorders;D012120
+C08.674;Respiratory Hypersensitivity;D012130
+C08.730;Respiratory Tract Infections;D012141
+C08.785;Respiratory Tract Neoplasms;D012142
+C11.768;Retinal Diseases;D012164
+C26.748;Retropneumoperitoneum;D012188
+C05.799;Rheumatic Diseases;D012216
+C02.782;RNA Virus Infections;D012327
+C26.761;Rupture;D012421
+C26.780;Self Mutilation;D012652
+C02.800;Sexually Transmitted Diseases;D012749
+C26.797;Shock, Traumatic;D012774
+C17.800;Skin Diseases;D012871
+C03.858;Skin Diseases, Parasitic;D012876
+C10.886;Sleep Disorders;D012893
+C02.839;Slow Virus Diseases;D012897
+C26.819;Spinal Cord Injuries;D013119
+C26.831;Spinal Injuries;D013124
+C26.844;Sprains and Strains;D013180
+C25.835;Substance Withdrawal Syndrome;D013375
+C07.678;Temporomandibular Joint Disorders;D013705
+C26.874;Tendon Injuries;D013708
+C05.906;Tennis Elbow;D013716
+C08.846;Thoracic Diseases;D013896
+C26.891;Thoracic Injuries;D013898
+C19.874;Thyroid Diseases;D013959
+C25.912;Tobacco Use Disorder;D014029
+C07.793;Tooth Diseases;D014076
+C08.907;Tracheal Diseases;D014133
+C19.927;Tuberculosis, Endocrine;D014383
+C12.672;Tuberculosis, Urogenital;D014401
+C02.928;Tumor Virus Infections;D014412
+C04.925;Tumor Virus Infections;D014412
+C12.706;Urogenital Abnormalities;D014564
+C12.758;Urogenital Neoplasms;D014565
+C12.777;Urologic Diseases;D014570
+C11.941;Uveal Diseases;D014603
+C14.907;Vascular Diseases;D014652
+C02.937;Viremia;D014766
+C11.966;Vision Disorders;D014786
+C26.951;Wound Infection;D014946
+C26.974;Wounds, Nonpenetrating;D014949
+C26.986;Wounds, Penetrating;D014950
+C01.908;Zoonoses;D015047
+C02.968;Zoonoses;D015047
+C03.908;Zoonoses;D015047
+C11.790;Scleral Diseases;D015422
+C20.425;Glomerulonephritis, Membranoproliferative;D015432
+C03.718;Pregnancy Complications, Parasitic;D015597
+C08.695;Respiratory System Abnormalities;D015619
+C02.330;Fatigue Syndrome, Chronic;D015673
+C08.280;Granuloma, Respiratory Tract;D015769
+C11.270;Eye Diseases, Hereditary;D015785
+C11.540;Ocular Hypotension;D015814
+C11.294;Eye Infections;D015817
+C25.793;Substance Abuse, Intravenous;D015819
+C03.300;Eye Infections, Parasitic;D015822
+C02.325;Eye Infections, Viral;D015828
+C11.590;Ocular Motility Disorders;D015835
+C06.267;Digestive System Fistula;D016154
+C08.702;Respiratory Tract Fistula;D016156
+C04.692;Neoplasms, Second Primary;D016609
+C19.787;Polyendocrinopathies, Autoimmune;D016884
+C04.666;Neoplasms, Post-Traumatic;D017169
+C02.825;Skin Diseases, Viral;D017193
+C26.808;Soft Tissue Injuries;D017695
+C26.930;Tympanic Membrane Perforation;D018058
+C14.240;Cardiovascular Abnormalities;D018376
+C03.695;Parasitemia;D018512
+C11.975;Vitreoretinopathy, Proliferative;D018630
+C07.650;Stomatognathic System Abnormalities;D018640
+C26.900;Tooth Injuries;D018677
+C02.290;Encephalitis, Viral;D018792
+C21.223;Environmental Illness;D018876
+C26.522;Heat Stress Disorders;D018882
+C24.653;Persian Gulf Syndrome;D018923
+C26.117;Back Injuries;D019567
+C10.574;Neurodegenerative Diseases;D019636
+C26.700;Neck Injuries;D019838
+C25.225;Amphetamine-Related Disorders;D019969
+C25.300;Cocaine-Related Disorders;D019970
+C25.100;Alcohol-Related Disorders;D019973
+C24.900;Sleep Disorders, Circadian Rhythm;D020178
+C10.900;Trauma, Nervous System;D020196
+C26.915;Trauma, Nervous System;D020196
+C11.980;Vitreous Detachment;D020255
+C10.720;Neurotoxicity Syndromes;D020258
+C10.114;Autoimmune Diseases of the Nervous System;D020274
+C10.562;Neurocutaneous Syndromes;D020752
+C02.182;Central Nervous System Viral Diseases;D020805
+C03.105;Central Nervous System Parasitic Infections;D020807
+C10.281;Chronobiology Disorders;D021081
+C26.540;Lacerations;D022125
+C26.531;Hip Injuries;D025981
+C16.320;Genetic Diseases, Inborn;D030342
+C21.676;Preconception Injuries;D047489
+C26.404;Fractures, Bone;D050723
+C26.411;Fractures, Cartilage;D050724
+C03.600;Mesomycetozoea Infections;D050738
+C13.351;Female Urogenital Diseases;D052776
+C24.400;Hand-Arm Vibration Syndrome;D053421
+C14.260;Cardiovascular Infections;D053821
+C20.608;Immune Reconstitution Inflammatory Syndrome;D054019
+C11.180;Cogan Syndrome;D055952
+C26.224;Contrecoup Injury;D056886
+C26.940;Vascular System Injuries;D057772
+C25.467;Inhalant Abuse;D058545
+C24.102;Asthma, Occupational;D059366
+C12.483;Pelvic Floor Disorders;D059952
+C26.716;Occupational Injuries;D060051
+C02.219;Coinfection;D060085
+C03.202;Coinfection;D060085
+C26.670;Nasal Septal Perforation;D061270
+C25.341;Drug Overdose;D062787
