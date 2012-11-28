@@ -1,5 +1,5 @@
 **This is work in process and getting up to speed with Clojure. Definitely not something you'd want to use in
-production**
+production. See OntoLearn repository for a rewrite in java**
 
 # Clojure PubMed to LibSVM utility
 
@@ -8,7 +8,8 @@ Collection of utilities for retrieving and processing [PubMed](http://www.ncbi.n
 Used for matching ontologies to MeSH annotated articles and inferring labels 
 for those not annotated using Support Vector Machines with linear kernel.
 
-Specifically used with [Human Disease Ontology](http://www.disease-ontology.org/)
+Specifically used with [Human Disease Ontology](http://www.disease-ontology.org/) and the disease tree of MeSH 2013 (transform available as xslt in resources).
+The mesh-owl xslt has some kinks, specifically it doesn't traverse the tree all that well, so use common sense.
 with a large-isch (5 GB) collection Randomized Clinical Trials.
 
 ## Usage
