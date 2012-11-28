@@ -1,45 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"  xmlns:func="http://drugis.org/functions" >
-    <xsl:strip-space  elements="*"/>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0" xmlns:xs="http://www.w3.org/2001/XMLSchema"  xmlns:local="local" exclude-result-prefixes="#all" >
+    <xsl:output method="text" indent="no"/>
+    <xsl:strip-space elements="*"/>
+    <xsl:key name="TreeRef" match="//TreeNumberList/TreeNumber" use="../../DescriptorName"></xsl:key>
     <xsl:key name="TreeNode" match="//DescriptorRecord/DescriptorName" use="../TreeNumberList/TreeNumber"></xsl:key>
     <xsl:key name="RecordId" match="//DescriptorRecord/DescriptorUI" use="../DescriptorName"></xsl:key>
+    
+    <xsl:function name="local:getUniqueTreeNumbers">
+        <xsl:param name="pNodes"/>
+        <xsl:param name="pLocal"/>
+        <xsl:variable name="vAllTreeNumbers">
+            <xsl:for-each select="$pNodes">
+                <xsl:analyze-string select="." regex="(.*)\.[^.]*$">
+                    <xsl:matching-substring>
+                        <xsl:value-of select="concat(key('TreeNode', regex-group(1), $pLocal),'::')"/>
+                    </xsl:matching-substring>
+                </xsl:analyze-string>
+            </xsl:for-each>
+        </xsl:variable>
+        <xsl:sequence select="distinct-values(tokenize(normalize-space($vAllTreeNumbers),'::'))"></xsl:sequence>
+    </xsl:function>
+    
     
     <xsl:template match="//DescriptorRecord">
         <xsl:if test="TreeNumberList/TreeNumber[contains(text(), 'C')]" >
             <xsl:text>[Term]&#10;</xsl:text>
-            <xsl:text>id: </xsl:text><xsl:value-of select="DescriptorUI"></xsl:value-of>
-            <xsl:text>&#10;</xsl:text>
-            <xsl:text>name: </xsl:text><xsl:value-of select="DescriptorName"></xsl:value-of>
-            <xsl:text>&#10;</xsl:text>
-            <xsl:text>def: </xsl:text><xsl:value-of select="ConceptList/Concept/ScopeNote"></xsl:value-of>
-            <xsl:apply-templates select="TreeNumberList/TreeNumber"></xsl:apply-templates>
-            <xsl:text>&#10;</xsl:text>
-        </xsl:if>
-    </xsl:template>
-    
-    <xsl:function name="func:strip-last">
-        <xsl:param name="str"></xsl:param>
-        <xsl:value-of select="substring($str, 1, string-length($str) - 1)"></xsl:value-of>
-    </xsl:function>
-    
-    <xsl:template match="TreeNumber">
-        <xsl:variable name="treeNumber" select="." />
-
-        <xsl:variable name="parentNumber">
-            <xsl:for-each select="tokenize($treeNumber, '\.')">
-                <xsl:if test="position() != last()">
-                    <xsl:value-of select="."></xsl:value-of>
-                    <xsl:text>.</xsl:text>
+            <xsl:value-of select="concat('id: ', DescriptorUI, '&#10;')"></xsl:value-of>
+            <xsl:value-of select="concat('name: ', DescriptorName, '&#10;')"></xsl:value-of>
+            <xsl:if test="count(ConceptList/Concept/ScopeNote) &gt; 0">
+                <xsl:text>def: </xsl:text>
+                <xsl:for-each select="ConceptList/Concept/ScopeNote">
+                    <xsl:value-of select="concat(normalize-space(.), '&#10;')" />
+                </xsl:for-each>
+            </xsl:if>
+            <xsl:variable name="synonyms" select="ConceptList/Concept/TermList"></xsl:variable>
+            <xsl:if test="count($synonyms) &gt; 0">
+                <xsl:for-each select="$synonyms/Term">
+                    <xsl:value-of select="concat('synonym: ', ./String, '&#10;')"></xsl:value-of>
+                </xsl:for-each>
+            </xsl:if>
+            <xsl:variable name="localScope" select="/"></xsl:variable>
+            <xsl:for-each select="local:getUniqueTreeNumbers(TreeNumberList/TreeNumber, $localScope)">
+                <xsl:if test="string-length(.) &gt; 1">
+                    <xsl:text>is_a: </xsl:text>
+                    <xsl:value-of select="key('RecordId', ., $localScope)"></xsl:value-of>
+                    <xsl:value-of select="concat( ' ! ', .)"></xsl:value-of>
+                    <xsl:text>&#10;</xsl:text>
                 </xsl:if>
             </xsl:for-each>
-        </xsl:variable>
-        <xsl:if test="string-length($parentNumber) &gt; 3">
-            <xsl:variable name="parentName" select="key('TreeNode', func:strip-last($parentNumber))"></xsl:variable>
-            <xsl:text>is_a: </xsl:text>
-            <xsl:value-of select="key('RecordId', $parentName)"></xsl:value-of>
-            <xsl:text> ! </xsl:text>
-            <xsl:value-of select="$parentName"></xsl:value-of>
+            <xsl:for-each select="TreeNumberList/TreeNumber">
+                <xsl:value-of select="concat('xref: MeSH_', ., '&#10;')"></xsl:value-of>
+            </xsl:for-each>
             <xsl:text>&#10;</xsl:text>
         </xsl:if>
     </xsl:template>
 </xsl:stylesheet>
+
+
