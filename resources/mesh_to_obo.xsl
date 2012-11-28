@@ -21,17 +21,25 @@
         <xsl:sequence select="distinct-values(tokenize(normalize-space($vAllTreeNumbers),'::'))"></xsl:sequence>
     </xsl:function>
     
-    
+    <xsl:variable name="regex">^C(0[1-9]|1[0-9]|20|2[5-9])(\.[^.]+)*$</xsl:variable>
     <xsl:template match="//DescriptorRecord">
-        <xsl:if test="TreeNumberList/TreeNumber[contains(text(), 'C')]" >
+        <xsl:if test="TreeNumberList/TreeNumber[matches(text(), $regex)]" >
             <xsl:text>[Term]&#10;</xsl:text>
-            <xsl:value-of select="concat('id: ', DescriptorUI, '&#10;')"></xsl:value-of>
+            <xsl:value-of select="concat('id: MSH:', DescriptorUI, '&#10;')"></xsl:value-of>
             <xsl:value-of select="concat('name: ', DescriptorName, '&#10;')"></xsl:value-of>
             <xsl:if test="count(ConceptList/Concept/ScopeNote) &gt; 0">
-                <xsl:text>def: </xsl:text>
-                <xsl:for-each select="ConceptList/Concept/ScopeNote">
-                    <xsl:value-of select="concat(normalize-space(.), '&#10;')" />
-                </xsl:for-each>
+                <xsl:text>def: "</xsl:text>
+                <xsl:value-of select="replace(normalize-space(ConceptList/Concept[1]/ScopeNote[1]), '\]|\[|\}|\{','*')"></xsl:value-of>
+                <xsl:text>"&#10;</xsl:text>
+                <!-- <xsl:for-each select="ConceptList/Concept/ScopeNote">
+                    <xsl:value-of select="replace(normalize-space(.), '\]|\[|\}|\{','*')" />
+                    <xsl:if test="not(position()=last())">
+                        <xsl:text>&#10;</xsl:text>
+                    </xsl:if>
+                    <xsl:if test="position()=last()">
+                        <xsl:text>"&#10;</xsl:text>
+                    </xsl:if>
+                </xsl:for-each> -->
             </xsl:if>
             <xsl:variable name="synonyms" select="ConceptList/Concept/TermList"></xsl:variable>
             <xsl:if test="count($synonyms) &gt; 0">
@@ -40,16 +48,16 @@
                 </xsl:for-each>
             </xsl:if>
             <xsl:variable name="localScope" select="/"></xsl:variable>
-            <xsl:for-each select="local:getUniqueTreeNumbers(TreeNumberList/TreeNumber, $localScope)">
+            <xsl:for-each select="local:getUniqueTreeNumbers(TreeNumberList/TreeNumber[matches(text(), $regex)], $localScope)">
                 <xsl:if test="string-length(.) &gt; 1">
-                    <xsl:text>is_a: </xsl:text>
+                    <xsl:text>is_a: MSH:</xsl:text>
                     <xsl:value-of select="key('RecordId', ., $localScope)"></xsl:value-of>
                     <xsl:value-of select="concat( ' ! ', .)"></xsl:value-of>
                     <xsl:text>&#10;</xsl:text>
                 </xsl:if>
             </xsl:for-each>
             <xsl:for-each select="TreeNumberList/TreeNumber">
-                <xsl:value-of select="concat('xref: MeSH_', ., '&#10;')"></xsl:value-of>
+                <xsl:value-of select="concat('xref: MeSHTree:', ., '&#10;')"></xsl:value-of>
             </xsl:for-each>
             <xsl:text>&#10;</xsl:text>
         </xsl:if>
