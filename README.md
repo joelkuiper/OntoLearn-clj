@@ -10,7 +10,7 @@ for those not annotated using Support Vector Machines with linear kernel.
 
 Specifically used with [Human Disease Ontology](http://www.disease-ontology.org/) and the disease tree of MeSH 2013 (transform available as xslt in resources).
 The mesh-owl xslt has some kinks, specifically it doesn't traverse the tree all that well, so use common sense.
-with a large-isch (5 GB) collection Randomized Clinical Trials.
+Parsed a large-isch (5 GB) collection Randomized Clinical Trials.
 
 ## Usage
 
