@@ -1,5 +1,5 @@
 **This is work in process and getting up to speed with Clojure. Definitely not something you'd want to use in
-production. See OntoLearn repository for a rewrite in java**
+production.**
 
 # Clojure PubMed to LibSVM utility
 
@@ -17,7 +17,7 @@ Parsed a large-isch (5 GB) collection Randomized Clinical Trials.
 * import/retrieve contains a wrapper for downloading XML Records based on a query
 to disk.
 * import/process contains utilities for writing fields in PubMed XML files to a [Redis](http://redis.io/)
-  back-end by using XSLT. 
+  back-end by using Xpath. 
 * pre-process includes stop-word filtering and stemming using Lucene on article
   abstracts
 * core includes code to write to .libsvm files
